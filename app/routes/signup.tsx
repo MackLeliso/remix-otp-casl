@@ -1,6 +1,6 @@
 import { Box, Button, Stack, TextField, Typography } from "@mui/material";
 import { ActionFunction, json } from "@remix-run/node";
-import { Form, useActionData } from "@remix-run/react";
+import { Form, useTransition, useActionData } from "@remix-run/react";
 import { User } from "@prisma/client";
 import { ActionInput, schema, validationAction } from "~/utils/validation";
 
@@ -27,7 +27,8 @@ export const action: ActionFunction = async ({ request }) => {
 
 export default function signup() {
   const actionData = useActionData();
-  console.log(actionData);
+  const { state } = useTransition();
+  const busy = state === "submitting";
   return (
     <Box display="flex" justifyContent="center" p={5}>
       <Box minWidth={500} bgcolor="skyblue" borderRadius={2}>
@@ -66,8 +67,8 @@ export default function signup() {
             <Typography variant="subtitle2" color="error">
               {actionData?.errors?.phone}
             </Typography>
-            <Button type="submit" variant="contained">
-              Submit
+            <Button disabled={busy} type="submit" variant="contained">
+              {busy ? "Submittting..." : "Submit"}
             </Button>
           </Stack>
         </Form>
