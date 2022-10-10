@@ -14,7 +14,7 @@ export async function validationAction<ActionInput>({
   try {
     const formData = schema.parse(body) as ActionInput;
     return { formData, errors: null };
-  } catch (e) {
+  } catch (e: any) {
     const errors = e as ZodError<ActionInput>;
     return {
       formData: body,
@@ -27,13 +27,13 @@ export async function validationAction<ActionInput>({
   }
 }
 
-const first_name = Z.string({ required_error: "firsName is required" }).min(3, {
-  message: "Must be 5 or more characters long",
-});
-const last_name = Z.string({ required_error: "lastName is required" }).min(3, {
-  message: "Must be 5 or more characters long",
-});
-const phone = Z.string({ required_error: "phone is required" }).min(9);
+const first_name = Z.string({
+  required_error: "firsName is required",
+}).nonempty({ message: "First name is required" });
+const last_name = Z.string({ required_error: "lastName is required" }).nonempty(
+  { message: "Last name is required" }
+);
+const phone = Z.string().nonempty({ message: "Phone number is required" });
 
 export const schema = Z.object({
   first_name,

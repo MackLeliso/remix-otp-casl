@@ -10,6 +10,7 @@ export const action: ActionFunction = async ({ request }) => {
     schema,
   });
   if (errors) {
+    console.log(errors);
     return json(errors, { status: 400 });
   }
   const { first_name, last_name, phone } = formData;
@@ -18,6 +19,10 @@ export const action: ActionFunction = async ({ request }) => {
     last_name,
     phone,
   };
+
+  console.log(field);
+
+  const data = {};
 };
 
 export default function signup() {
