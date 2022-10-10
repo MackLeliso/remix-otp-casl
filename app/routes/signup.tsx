@@ -1,6 +1,24 @@
 import { Box, Button, Stack, TextField, Typography } from "@mui/material";
-import { ActionFunction } from "@remix-run/node";
+import { ActionFunction, json } from "@remix-run/node";
 import { Form, useActionData } from "@remix-run/react";
+import { User } from "@prisma/client";
+import { ActionInput, schema, validationAction } from "~/utils/validation";
+
+export const action: ActionFunction = async ({ request }) => {
+  const { formData, errors } = await validationAction<ActionInput>({
+    request,
+    schema,
+  });
+  if (errors) {
+    return json(errors, { status: 400 });
+  }
+  const { first_name, last_name, phone } = formData;
+  const field: Pick<User, "first_name" | "last_name" | "phone"> = {
+    first_name,
+    last_name,
+    phone,
+  };
+};
 
 export default function signup() {
   return (
