@@ -3,13 +3,13 @@ import * as Z from "zod";
 
 type ActionErrors<T> = Partial<Record<keyof T, string>>;
 export async function validationAction<ActionInput>({
-  request,
+  form,
   schema,
 }: {
-  request: Request;
+  form: FormData;
   schema: ZodSchema;
 }) {
-  const body = Object.fromEntries(await request.formData());
+  const body = Object.fromEntries(form);
 
   try {
     const formData = schema.parse(body) as ActionInput;
