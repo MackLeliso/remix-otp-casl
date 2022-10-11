@@ -14,7 +14,7 @@ model User {
   id String @id @default(uuid())
   first_name String
   last_name String
-  phone String
+  phone String @unique
   delete Boolean @default(false)
   posts Post[]
   createdAt DateTime @default(now())

@@ -5,7 +5,6 @@ const client = require("twilio")(config.ACCOUNTSID, config.AUTHTOKEN, {
 
 export const phoneVerification = async (phone: any) => {
   try {
-    console.log("phone", +phone);
     client.verify
       .services(config.SERVICESID)
       .verifications.create({
@@ -22,9 +21,6 @@ export const phoneVerification = async (phone: any) => {
 
 export const checkPhoneVerification = async (phone: any, code: number) => {
   try {
-    console.log("phone", +phone);
-    console.log("code", code);
-
     const data = client.verify
       .services(config.SERVICESID)
       .verificationChecks.create({
@@ -32,10 +28,9 @@ export const checkPhoneVerification = async (phone: any, code: number) => {
         code: code,
       })
       .then((data: any) => {
-        console.log(data.status);
+        console.log(data);
         return data;
       });
-    console.log("ineerdaa", data);
     return data;
   } catch (error) {
     console.log(error);

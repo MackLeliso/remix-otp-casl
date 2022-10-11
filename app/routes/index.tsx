@@ -1,7 +1,24 @@
+import { LoaderFunction } from "@remix-run/node"; // or cloudflare/deno
+import { useLoaderData } from "@remix-run/react";
+import authenticator from "~/utils/auth.server";
+
+export const loader: LoaderFunction = async ({ request }) => {
+  return await authenticator.isAuthenticated(request, {
+    failureRedirect: "/login",
+  });
+};
+
 export default function Index() {
+  const loaderData = useLoaderData();
+
+  console.log(loaderData);
+
   return (
     <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.4" }}>
-      <h1>Welcome to Remix</h1>
+      <h1>
+        {" "}
+        Hello <b>{loaderData?.first_name}</b>, Well come to Dashboard
+      </h1>
       <ul>
         <li>
           <a

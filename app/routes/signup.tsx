@@ -1,5 +1,5 @@
 import { Box, Button, Stack, TextField, Typography } from "@mui/material";
-import { ActionFunction, redirect, json } from "@remix-run/node";
+import { ActionFunction, json, ActionArgs } from "@remix-run/node";
 import { Form, useTransition, useActionData } from "@remix-run/react";
 import { User } from "@prisma/client";
 import { ActionInput, schema, validationAction } from "~/utils/validation";
@@ -7,29 +7,34 @@ import {
   phoneVerification,
   checkPhoneVerification,
 } from "~/utils/verification";
-import { checkPhoneNumberExist, createUser } from "~/utils/user.server";
+import { checkPhoneNumberExist } from "~/utils/user.server";
+import authenticator from "~/utils/auth.server";
 
-export const action: ActionFunction = async ({ request }) => {
-  const form = await request.formData();
-  const submitType = form.get("_method");
+export const action: ActionFunction = async ({
+  context,
+  request,
+}: ActionArgs) => {
+  const formData = await request.formData();
+
+  const submitType = formData.get("_method");
   console.log(submitType);
-
   if (submitType === "register") {
-    const { formData, errors } = await validationAction<ActionInput>({
-      form,
+    const { formdata, errors } = await validationAction<ActionInput>({
+      formData,
       schema,
     });
 
     if (errors) {
       return json({ errors }, { status: 400 });
     }
-    const { first_name, last_name, phone } = formData;
+    const { first_name, last_name, phone } = formdata;
     const field: Pick<User, "first_name" | "last_name" | "phone"> = {
       first_name,
       last_name,
       phone,
     };
     const checkPhone = await checkPhoneNumberExist(phone);
+    console.log(checkPhone);
     if (checkPhone) {
       return json({ errors: { phone: "Phone number already exist" } });
     }
@@ -38,18 +43,19 @@ export const action: ActionFunction = async ({ request }) => {
     return json({ data: field });
   }
   if (submitType === "verifiy") {
-    const body: any = form.get("user");
-    const code: any = form.get("code");
+    const body: any = formData.get("user");
+    const code: any = formData.get("code");
     const user = JSON.parse(body);
     const check = await checkPhoneVerification(user.phone, code);
 
     console.log("check", check);
     if (check.status === "approved") {
-      const useResp = await createUser(user);
-      if (!useResp) {
-        return json({ errors: { user: "User not Registered" } });
-      }
-      return redirect("/");
+      return await authenticator.authenticate("form", request, {
+        successRedirect: "/",
+        failureRedirect: "/login",
+        throwOnError: true,
+        context: { formData },
+      });
     } else if (check.status === "rejected") {
       return json({ rejected: "please try again" });
     } else {
@@ -62,6 +68,7 @@ export default function signup() {
   const actionData = useActionData();
   const { state } = useTransition();
   const busy = state === "submitting";
+
   return (
     <Box display="flex" justifyContent="center" p={5}>
       <Box minWidth={500} bgcolor="skyblue" borderRadius={2}>
