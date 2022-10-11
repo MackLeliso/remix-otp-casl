@@ -3,6 +3,11 @@ import { ActionFunction, redirect, json } from "@remix-run/node";
 import { Form, useTransition, useActionData } from "@remix-run/react";
 import { User } from "@prisma/client";
 import { ActionInput, schema, validationAction } from "~/utils/validation";
+import {
+  phoneVerification,
+  checkPhoneVerification,
+} from "~/utils/verification";
+import { number } from "zod";
 
 export const action: ActionFunction = async ({ request }) => {
   const form = await request.formData();
@@ -24,12 +29,18 @@ export const action: ActionFunction = async ({ request }) => {
       last_name,
       phone,
     };
+    const res = await phoneVerification(phone);
+    console.log(res);
     console.log("register", field);
     return json({ data: field });
   }
   if (submitType === "verifiy") {
-    const user: any = form.get("user");
-    console.log("user", JSON.parse(user));
+    const body: any = form.get("user");
+    const code: any = form.get("code");
+    const user = JSON.parse(body);
+    console.log("user", user);
+    const check = await checkPhoneVerification(user.phone, code);
+    console.log("check", check);
     return json({ data: user });
   }
 };
@@ -87,11 +98,14 @@ export default function signup() {
                   name="user"
                   value={JSON.stringify(actionData?.data)}
                 />
-
+                <TextField
+                  id="filled-hidden-label-small"
+                  placeholder="Code"
+                  name="code"
+                  variant="filled"
+                  size="small"
+                />
                 <input type="hidden" name="_method" value="verifiy" />
-                <Typography variant="subtitle2">
-                  {actionData?.data?.first_name}
-                </Typography>
               </>
             )}
             <Button disabled={busy} type="submit" variant="contained">
