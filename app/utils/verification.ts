@@ -25,15 +25,18 @@ export const checkPhoneVerification = async (phone: any, code: number) => {
     console.log("phone", +phone);
     console.log("code", code);
 
-    client.verify
+    const data = client.verify
       .services(config.SERVICESID)
       .verificationChecks.create({
         to: `+251${+phone}`,
         code: code,
       })
       .then((data: any) => {
-        console.log(data);
+        console.log(data.status);
+        return data;
       });
+    console.log("ineerdaa", data);
+    return data;
   } catch (error) {
     console.log(error);
   }

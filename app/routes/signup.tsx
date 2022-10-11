@@ -7,7 +7,7 @@ import {
   phoneVerification,
   checkPhoneVerification,
 } from "~/utils/verification";
-import { number } from "zod";
+import { checkPhoneNumberExist, createUser } from "~/utils/user.server";
 
 export const action: ActionFunction = async ({ request }) => {
   const form = await request.formData();
@@ -29,19 +29,32 @@ export const action: ActionFunction = async ({ request }) => {
       last_name,
       phone,
     };
+    const checkPhone = await checkPhoneNumberExist(phone);
+    if (checkPhone) {
+      return json({ errors: { phone: "Phone number already exist" } });
+    }
     const res = await phoneVerification(phone);
     console.log(res);
-    console.log("register", field);
     return json({ data: field });
   }
   if (submitType === "verifiy") {
     const body: any = form.get("user");
     const code: any = form.get("code");
     const user = JSON.parse(body);
-    console.log("user", user);
     const check = await checkPhoneVerification(user.phone, code);
+
     console.log("check", check);
-    return json({ data: user });
+    if (check.status === "approved") {
+      const useResp = await createUser(user);
+      if (!useResp) {
+        return json({ errors: { user: "User not Registered" } });
+      }
+      return redirect("/");
+    } else if (check.status === "rejected") {
+      return json({ rejected: "please try again" });
+    } else {
+      return json({ rejected: "Something went wrong, Please try again" });
+    }
   }
 };
 
@@ -53,12 +66,15 @@ export default function signup() {
     <Box display="flex" justifyContent="center" p={5}>
       <Box minWidth={500} bgcolor="skyblue" borderRadius={2}>
         <Form method="post">
-          <Stack spacing={{ xs: 1, sm: 2, md: 4 }} p={3}>
+          <Stack spacing={{ xs: 1, sm: 2, md: 3 }} p={3}>
             {actionData?.data === undefined ? (
               <>
                 <input type="hidden" name="_method" value="register" />
                 <Typography fontWeight="bold" color="dark" textAlign="center">
                   Sign In
+                </Typography>
+                <Typography variant="subtitle2" color="error">
+                  {actionData?.rejected}
                 </Typography>
                 <TextField
                   id="filled-hidden-label-small"
