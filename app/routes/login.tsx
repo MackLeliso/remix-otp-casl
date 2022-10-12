@@ -6,7 +6,7 @@ import { checkPhoneNumberExist } from "~/utils/user.server";
 import {
   checkPhoneVerification,
   phoneVerification,
-} from "~/utils/verification";
+} from "~/utils/verification.server";
 
 export const action: ActionFunction = async ({ context, request }) => {
   const formData = await request.formData();

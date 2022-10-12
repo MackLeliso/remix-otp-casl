@@ -3,15 +3,32 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function seed() {
-  const user = await prisma.user.create({
+  const role = await prisma.role.create({
     data: {
-      first_name: "mesut",
-      last_name: "ozil",
-      phone: "+251924011541",
+      name: "superadmin role",
+      description: "superadmin role take any of action on system",
+      user: {
+        create: {
+          first_name: "leo",
+          last_name: "messi",
+          phone: "0928425097",
+        },
+      },
+      permission: {
+        create: {
+          permission: {
+            create: {
+              name: "manage all",
+              description: "This permission can manage all of the system",
+              action: "manage",
+              subject: "all",
+            },
+          },
+        },
+      },
     },
   });
-
-  console.log(user);
+  console.log(role);
 }
 
 seed()

@@ -2,11 +2,15 @@ import { Box, Button, Stack, TextField, Typography } from "@mui/material";
 import { ActionFunction, json, ActionArgs } from "@remix-run/node";
 import { Form, useTransition, useActionData } from "@remix-run/react";
 import { User } from "@prisma/client";
-import { ActionInput, schema, validationAction } from "~/utils/validation";
+import {
+  ActionInput,
+  schema,
+  validationAction,
+} from "~/utils/validation.server";
 import {
   phoneVerification,
   checkPhoneVerification,
-} from "~/utils/verification";
+} from "~/utils/verification.server";
 import { checkPhoneNumberExist } from "~/utils/user.server";
 import authenticator from "~/utils/auth.server";
 

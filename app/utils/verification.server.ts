@@ -1,4 +1,4 @@
-const config = require("./config");
+const config = require("./config.server");
 const client = require("twilio")(config.ACCOUNTSID, config.AUTHTOKEN, {
   lazyLoading: true,
 });
