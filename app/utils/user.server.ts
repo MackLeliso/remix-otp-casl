@@ -10,6 +10,13 @@ export const createUser = async (userData: any) => {
 export const checkPhoneNumberExist = async (phone: any) => {
   const checkPhoneExist = await db.user.findFirst({
     where: { phone: phone, delete: false },
+    select: {
+      id: true,
+      phone: true,
+      first_name: true,
+      last_name: true,
+    },
   });
+
   return checkPhoneExist;
 };

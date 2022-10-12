@@ -78,7 +78,7 @@ export default function signup() {
               <>
                 <input type="hidden" name="_method" value="register" />
                 <Typography fontWeight="bold" color="dark" textAlign="center">
-                  Sign In
+                  Sign Up
                 </Typography>
                 <Typography variant="subtitle2" color="error">
                   {actionData?.rejected}
