@@ -33,8 +33,9 @@ const first_name = Z.string({
 const last_name = Z.string({ required_error: "lastName is required" }).nonempty(
   { message: "Last name is required" }
 );
-const phone = Z.string().nonempty({ message: "Phone number is required" });
-
+const phone = Z.string().startsWith("09", {
+  message: "Phone number start with 09...",
+});
 export const schema = Z.object({
   first_name,
   last_name,
