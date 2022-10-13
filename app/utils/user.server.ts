@@ -15,6 +15,7 @@ export const checkPhoneNumberExist = async (phone: any) => {
       phone: true,
       first_name: true,
       last_name: true,
+      roleId: true,
     },
   });
 
