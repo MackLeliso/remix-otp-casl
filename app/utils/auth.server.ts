@@ -5,7 +5,7 @@ import { User } from "@prisma/client";
 import { sessionStorage } from "./session.server";
 import { checkPhoneNumberExist, createUser } from "./user.server";
 const authenticator = new Authenticator<
-  Pick<User, "first_name" | "last_name" | "phone"> | Error | null
+  Pick<User, "first_name" | "last_name" | "phone" | "id">
 >(sessionStorage, {
   sessionKey: "sessionKey", // keep in sync
   sessionErrorKey: "sessionErrorKey", // keep in sync

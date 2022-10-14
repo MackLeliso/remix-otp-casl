@@ -5,67 +5,80 @@ import authenticator from "~/utils/auth.server";
 import { userAbility } from "~/utils/defineAbility.server";
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const auth: any = await authenticator.isAuthenticated(request, {
+  const auth: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    phone: string;
+  } = await authenticator.isAuthenticated(request, {
     failureRedirect: "/login",
   });
-  console.log(
-    "ability.M",
-    (await userAbility(auth.roleId)).can("read", "user")
-  );
-  ForbiddenError.from(await userAbility(auth.roleId)).throwUnlessCan(
+
+  ForbiddenError.from(await userAbility(auth.id)).throwUnlessCan(
     "read",
     "user"
   );
 
-  const able = (await userAbility(auth.roleId)).can("read", "user");
+  const user = (await userAbility(auth.id)).can("read", "user");
+  const post = (await userAbility(auth.id)).can("read", "post");
+  const comment = (await userAbility(auth.id)).can("read", "comment");
+  const role = (await userAbility(auth.id)).can("read", "role");
+  const permission = (await userAbility(auth.id)).can("read", "permission");
+  const permissions = { user };
+  console.log("permissions", permissions);
 
-  // const able = await userAbility(auth.roleId);
-
-  console.log(await userAbility(auth.roleId));
-
-  console.log("fffffffffffff");
-
-  return able;
+  return json({ permission: permissions, auth: auth });
 };
 
 export default function Index() {
-  const loaderData = useLoaderData();
-  console.log(loaderData);
-  // console.log(loaderData);
-  // console.log(loaderData?.abili);
+  const { auth, permission } = useLoaderData();
 
   return (
     <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.4" }}>
       <p>
         {" "}
-        Hello <b>{loaderData?.first_name}</b>, Well come to Dashboard
+        Hello <b>{auth?.first_name}</b>, Well come to Dashboard
       </p>
-      {loaderData ? <p>user</p> : null}
 
       <ul>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/blog"
-            rel="noreferrer"
-          >
-            15m Quickstart Blog Tutorial
-          </a>
-        </li>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/jokes"
-            rel="noreferrer"
-          >
-            Deep Dive Jokes App Tutorial
-          </a>
-        </li>
-        <li>
-          <a target="_blank" href="https://remix.run/docs" rel="noreferrer">
-            Remix Docs
-          </a>
-        </li>
+        {permission?.user ? (
+          <li>
+            <a href="." rel="noreferrer">
+              <p>user</p>
+            </a>
+          </li>
+        ) : null}
+        {permission?.role ? (
+          <li>
+            <a href="." rel="noreferrer">
+              <p>role</p>
+            </a>
+          </li>
+        ) : null}
+
+        {permission?.permission ? (
+          <li>
+            <a href="." rel="noreferrer">
+              <p>permission</p>
+            </a>
+          </li>
+        ) : null}
+
+        {permission?.post ? (
+          <li>
+            <a href="." rel="noreferrer">
+              <p>post</p>
+            </a>
+          </li>
+        ) : null}
+
+        {permission?.comment ? (
+          <li>
+            <a href="." rel="noreferrer">
+              <p>comment</p>
+            </a>
+          </li>
+        ) : null}
       </ul>
     </div>
   );

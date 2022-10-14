@@ -3,6 +3,12 @@ import { db } from "./db.server";
 export const createUser = async (userData: any) => {
   const user = await db.user.create({
     data: userData,
+    select: {
+      id: true,
+      phone: true,
+      first_name: true,
+      last_name: true,
+    },
   });
   return user;
 };
@@ -15,7 +21,6 @@ export const checkPhoneNumberExist = async (phone: any) => {
       phone: true,
       first_name: true,
       last_name: true,
-      roleId: true,
     },
   });
 
