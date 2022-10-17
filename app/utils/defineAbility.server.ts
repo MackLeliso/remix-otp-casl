@@ -22,7 +22,8 @@ export const userAbility = async (id: string) => {
             select: {
               action: true,
               subject: true,
-              condition: true,
+              conditions: true,
+              fields: true,
             },
           },
         },
@@ -38,11 +39,26 @@ export const userAbility = async (id: string) => {
   for (const item of permissions) {
     const obj: any = {};
     for (const key in item) {
-      if (item[key]) obj[key] = item[key];
+      console.log(item[key]);
+      if (item[key] && item[key].length != 0) obj[key] = item[key];
     }
     permission.push(obj);
   }
+
+  permission.findIndex((object) => {
+    object.conditions ? (object.conditions.id = id) : null;
+  });
+
   console.log("userPermissions", permission);
 
   return createMongoAbility(permission);
 };
+
+const object1 = {
+  a: "somestring",
+  b: 42,
+};
+
+for (const [key, value] of Object.entries(object1)) {
+  console.log(`${key}: ${value}`);
+}

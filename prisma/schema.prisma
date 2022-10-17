@@ -41,7 +41,8 @@ model Permission {
   description String?
   action String
   subject String
-  condition Json?
+  conditions Json?
+  fields String[] 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

@@ -1,4 +1,4 @@
-import { ForbiddenError } from "@casl/ability";
+import { ForbiddenError, subject } from "@casl/ability";
 import { json, LoaderFunction } from "@remix-run/node"; // or cloudflare/deno
 import { useLoaderData } from "@remix-run/react";
 import authenticator from "~/utils/auth.server";
@@ -20,11 +20,14 @@ export const loader: LoaderFunction = async ({ request }) => {
   );
 
   const user = (await userAbility(auth.id)).can("read", "user");
-  const post = (await userAbility(auth.id)).can("read", "post");
+  const post = (await userAbility(auth.id)).can(
+    "delete",
+    subject("post", { id: auth.id })
+  );
   const comment = (await userAbility(auth.id)).can("read", "comment");
   const role = (await userAbility(auth.id)).can("read", "role");
   const permission = (await userAbility(auth.id)).can("read", "permission");
-  const permissions = { user };
+  const permissions = { user, post, role, permission, comment };
   console.log("permissions", permissions);
 
   return json({ permission: permissions, auth: auth });
@@ -51,7 +54,7 @@ export default function Index() {
         {permission?.role ? (
           <li>
             <a href="." rel="noreferrer">
-              <p>role</p>
+              <p> role</p>
             </a>
           </li>
         ) : null}
@@ -67,7 +70,7 @@ export default function Index() {
         {permission?.post ? (
           <li>
             <a href="." rel="noreferrer">
-              <p>post</p>
+              <p> delete post</p>
             </a>
           </li>
         ) : null}
