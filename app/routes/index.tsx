@@ -21,9 +21,9 @@ export const loader: LoaderFunction = async ({ request }) => {
     "delete",
     subject("post", { id: auth.id })
   );
-  const comment = (await userAbility(auth.id)).can("read", "comment");
+  const comment = (await userAbility(auth)).can("read", "comment");
   const role = (await userAbility(auth)).can("read", "role");
-  const permission = (await userAbility(auth.id)).can("read", "permission");
+  const permission = (await userAbility(auth)).can("read", "permission");
   const permissions = {
     user,
     post,
