@@ -14,21 +14,23 @@ export const loader: LoaderFunction = async ({ request }) => {
     failureRedirect: "/login",
   });
 
-  ForbiddenError.from(await userAbility(auth.id)).throwUnlessCan(
-    "read",
-    "user"
-  );
+  ForbiddenError.from(await userAbility(auth)).throwUnlessCan("read", "user");
 
-  const user = (await userAbility(auth.id)).can("read", "user");
-  const post = (await userAbility(auth.id)).can(
+  const user = (await userAbility(auth)).can("read", "user");
+  const post = (await userAbility(auth)).can(
     "delete",
     subject("post", { id: auth.id })
   );
   const comment = (await userAbility(auth.id)).can("read", "comment");
-  const role = (await userAbility(auth.id)).can("read", "role");
+  const role = (await userAbility(auth)).can("read", "role");
   const permission = (await userAbility(auth.id)).can("read", "permission");
-  const permissions = { user, post, role, permission, comment };
-  console.log("permissions", permissions);
+  const permissions = {
+    user,
+    post,
+    role,
+    permission,
+    comment,
+  };
 
   return json({ permission: permissions, auth: auth });
 };
@@ -40,7 +42,11 @@ export default function Index() {
     <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.4" }}>
       <p>
         {" "}
-        Hello <b>{auth?.first_name}</b>, Well come to Dashboard
+        Hello{" "}
+        <b>
+          {auth?.first_name.charAt(0).toUpperCase() + auth?.first_name.slice(1)}
+        </b>
+        , Well come to Dashboard
       </p>
 
       <ul>

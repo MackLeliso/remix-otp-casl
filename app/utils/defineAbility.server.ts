@@ -47,6 +47,7 @@ export const userAbility = async (auth: any) => {
   }
 
   permission.findIndex((object) => {
+    console.log(object.conditions);
     if (object.conditions) {
       for (var key in object.conditions) {
         if (key in auth) {
@@ -55,8 +56,6 @@ export const userAbility = async (auth: any) => {
       }
     }
   });
-
-  console.log("userPermissions", permission);
 
   return createMongoAbility(permission);
 };
