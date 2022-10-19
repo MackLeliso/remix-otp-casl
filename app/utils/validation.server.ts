@@ -20,19 +20,15 @@ export async function validationAction<ActionInput>({
       formdata: body,
       errors: errors.issues.reduce((acc: ActionErrors<ActionInput>, curr) => {
         const key = curr.path[0] as keyof ActionInput;
-        acc[key] = curr.message;
+        acc[key] = curr.message.replace("Invalid enum value. ", "");
         return acc;
       }, {}),
     };
   }
 }
 
-const first_name = Z.string({
-  required_error: "firsName is required",
-}).nonempty({ message: "First name is required" });
-const last_name = Z.string({ required_error: "lastName is required" }).nonempty(
-  { message: "Last name is required" }
-);
+const first_name = Z.string().min(1, { message: "First name is required" });
+const last_name = Z.string().min(1, { message: "Last name is required" });
 const phone = Z.string().startsWith("09", {
   message: "Phone number start with 09...",
 });
