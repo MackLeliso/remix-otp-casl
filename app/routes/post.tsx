@@ -15,30 +15,27 @@ import { db } from "~/utils/db.server";
 import { useEffect, useMemo, useState } from "react";
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const auth: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    phone: string;
-  } = await authenticator.isAuthenticated(request, {
-    failureRedirect: "/login",
-  });
+  // const auth: {
+  //   id: string;
+  //   first_name: string;
+  //   last_name: string;
+  //   phone: string;
+  // } = await authenticator.isAuthenticated(request, {
+  //   failureRedirect: "/login",
+  // });
+
+  // const url = new URL(request.url);
+  // console.log(url.searchParams.get("offset"));
+  // const limit = Number(url.searchParams.get("limit")) || 2;
+  // const test = Number(url.searchParams.get("offset"));
+
+  // const offset = test ? test - 1 : 0;
   // const skip = limit * offset;
-  // const search = req.query.search || ""
-
-  const url = new URL(request.url);
-  console.log(url.searchParams.get("offset"));
-  const limit = Number(url.searchParams.get("limit")) || 2;
-  const test = Number(url.searchParams.get("offset"));
-
-  const offset = test ? test - 1 : 0;
-  const skip = limit * offset;
-
   const [posts, count] = await db.$transaction([
     db.post.findMany({
       orderBy: { createdAt: "desc" },
-      skip: skip,
-      take: limit,
+      // skip: skip,
+      // take: limit,
     }),
     db.post.count(),
   ]);
@@ -63,31 +60,32 @@ export const loader: LoaderFunction = async ({ request }) => {
     count: count,
     data: posts,
   };
-  return json({ auth: auth, post: data });
+  // return json({ auth: auth, post: data });
+  return json({ auth: null, post: data });
 };
 
 export const action: ActionFunction = async ({ request }) => {
-  const auth: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    phone: string;
-  } = await authenticator.isAuthenticated(request, {
-    failureRedirect: "/login",
-  });
-  const { title, content } = Object.fromEntries(await request.formData());
+  // const auth: {
+  //   id: string;
+  //   first_name: string;
+  //   last_name: string;
+  //   phone: string;
+  // } = await authenticator.isAuthenticated(request, {
+  //   failureRedirect: "/login",
+  // });
+  // const { title, content } = Object.fromEntries(await request.formData());
 
-  console.log(auth.id);
+  // console.log(auth.id);
 
-  const post = await db.post.create({
-    data: {
-      title: title,
-      content: content,
-      authorId: auth.id,
-    },
-  });
+  // const post = await db.post.create({
+  //   data: {
+  //     title: title,
+  //     content: content,
+  //     authorId: auth.id,
+  //   },
+  // });
 
-  return null;
+  return json({ auth: null, post: null });
 };
 
 export default function post() {
@@ -105,7 +103,7 @@ export default function post() {
   };
 
   const handleLimit = (event: React.ChangeEvent<unknown>, value: number) => {
-    console.log((window.location.search = `offset=${page}&limit=${value}`));
+    // console.log((window.location.search = `offset=${page}&limit=${value}`));
     setLimit(value);
   };
 
@@ -116,7 +114,7 @@ export default function post() {
   return (
     <Box display="flex" justifyContent="space-between">
       <Box flex={7} marginRight={5}>
-        {post.data.map((post: any) => (
+        {post?.data?.map((post: any) => (
           <Stack
             direction="column"
             spacing={2}

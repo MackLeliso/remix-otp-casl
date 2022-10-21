@@ -1,55 +1,73 @@
 import { ForbiddenError, subject } from "@casl/ability";
-import { json, LoaderFunction } from "@remix-run/node"; // or cloudflare/deno
+import { Box, Divider, Typography } from "@mui/material";
+import { json, LoaderFunction, redirect } from "@remix-run/node"; // or cloudflare/deno
 import { useLoaderData } from "@remix-run/react";
-import authenticator from "~/utils/auth.server";
 import { userAbility } from "~/utils/defineAbility.server";
+import {
+  getSession,
+  getUser,
+  getUserData,
+  logout,
+} from "~/utils/session.server";
 
-export const loader: LoaderFunction = async ({ request }) => {
-  const auth: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    phone: string;
-  } = await authenticator.isAuthenticated(request, {
-    failureRedirect: "/login",
-  });
-
-  ForbiddenError.from(await userAbility(auth)).throwUnlessCan("read", "user");
-
-  const user = (await userAbility(auth)).can("read", "user");
-  const post = (await userAbility(auth)).can(
-    "delete",
-    subject("post", { id: auth.id })
-  );
-  const comment = (await userAbility(auth)).can("read", "comment");
-  const role = (await userAbility(auth)).can("read", "role");
-  const permission = (await userAbility(auth)).can("read", "permission");
-  const permissions = {
-    user,
-    post,
-    role,
-    permission,
-    comment,
-  };
-
-  return json({ permission: permissions, auth: auth });
+type LoaderData = {
+  user: Awaited<ReturnType<typeof getUser>>;
 };
 
+export const loader: LoaderFunction = async ({ request }) => {
+  const auth = await getUserData(request);
+  if (!auth) return redirect("/login");
+  const user = await getUser(request);
+  const data: LoaderData = {
+    user,
+  };
+
+  // ForbiddenError.from(await userAbility(auth)).throwUnlessCan("read", "user");
+
+  // const user = (await userAbility(auth)).can("read", "user");
+  // const post = (await userAbility(auth)).can(
+  //   "delete",
+  //   subject("post", { id: auth.id })
+  // );
+  // const comment = (await userAbility(auth)).can("read", "comment");
+  // const role = (await userAbility(auth)).can("read", "role");
+  // const permission = (await userAbility(auth)).can("read", "permission");
+  // const permissions = {
+  //   user,
+  //   // post,
+  //   // role,
+  //   // permission,
+  //   // comment,
+  // };
+
+  // return json({ permission: permissions, auth: auth });
+  return json({ user });
+};
 export default function Index() {
-  const { auth, permission } = useLoaderData();
+  const { user } = useLoaderData<LoaderData>();
 
   return (
-    <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.4" }}>
-      <p>
-        {" "}
-        Hello{" "}
-        <b>
-          {auth?.first_name.charAt(0).toUpperCase() + auth?.first_name.slice(1)}
-        </b>
-        , Well come to Dashboard
-      </p>
+    <Box>
+      <Box display="flex" alignItems="center" justifyContent="center">
+        <Box
+          sx={{
+            padding: 4,
+            backgroundColor: "darkcyan",
+            height: "50vh",
+            width: "80vw",
+            borderRadius: "10px",
+          }}
+        >
+          <Typography color="white" variant="h5" sx={{ textAlign: "center" }}>
+            Well come <b>{user?.first_name.toUpperCase()} </b>
+            to Remix
+          </Typography>
+          <Divider sx={{ color: "white" }} />
+        </Box>
+      </Box>
+    </Box>
 
-      <ul>
+    /* <ul>
         {permission?.user ? (
           <li>
             <a href="." rel="noreferrer">
@@ -88,8 +106,7 @@ export default function Index() {
             </a>
           </li>
         ) : null}
-      </ul>
-    </div>
+      </ul> */
   );
 }
 

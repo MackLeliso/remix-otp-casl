@@ -1,5 +1,10 @@
 {
-  "include": ["remix.env.d.ts", "**/*.ts", "**/*.tsx"],
+  "include": [
+    "remix.env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "app/utils/otp.server.js"
+  ],
   "compilerOptions": {
     "sourceMap": true,
     "outDir": "dist",
