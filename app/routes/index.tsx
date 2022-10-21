@@ -16,6 +16,7 @@ type LoaderData = {
 
 export const loader: LoaderFunction = async ({ request }) => {
   const auth = await getUserData(request);
+  console.log(auth);
   if (!auth) return redirect("/login");
   const user = await getUser(request);
   const data: LoaderData = {
