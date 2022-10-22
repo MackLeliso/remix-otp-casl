@@ -1,108 +1,80 @@
-import { Box, Button, Stack, TextField, Typography } from "@mui/material";
-import { ActionFunction, json } from "@remix-run/node";
+import { Box, Button, Link, Stack, TextField, Typography } from "@mui/material";
+import { ActionFunction, json, redirect } from "@remix-run/node";
 import { Form, useTransition, useActionData } from "@remix-run/react";
-import authenticator from "~/utils/auth.server";
 import { verifyOtp, loginOtp } from "~/utils/otp.server";
-import { createUserSession, User } from "~/utils/session.server";
-import { checkPhoneNumberExist } from "~/utils/user.server";
-import {
-  checkPhoneVerification,
-  phoneVerification,
-} from "~/utils/verification.server";
+import { createUserSession } from "~/utils/session.server";
 
+type ActonData = {
+  phone: string;
+};
+type LoginData = {
+  message: string;
+  status: number;
+};
 export const action: ActionFunction = async ({ context, request }) => {
-  const formData = await request.formData();
-  const submitType = formData.get("_method");
-  if (submitType === "login") {
-    const phone = formData.get("phone") as string;
-    const phoneResponse = await loginOtp(phone);
-    console.log(phoneResponse);
-    return phoneResponse;
+  const { phone } = (await Object.fromEntries(
+    await request.formData()
+  )) as ActonData;
+  const { message, status } = (await loginOtp(phone)) as LoginData;
+  if (message === "otp-sent") {
+    return await createUserSession({ phone }, `/verify`);
   }
-
-  if (submitType === "verify") {
-    const code = formData.get("code") as string;
-
-    const otp: any = await verifyOtp(code);
-    const { id, first_name, last_name, ...field } = otp.data;
-    const user: { id: string; first_name: string; last_name: string } = {
-      id,
-      first_name,
-      last_name,
-    };
-    console.log(user);
-    return createUserSession(user, "/");
-
-    // const checkStatus: any = await checkPhoneVerification(_phone, code);
-    // if (checkStatus.status === "approved") {
-    //   return await authenticator.authenticate("form", request, {
-    //     successRedirect: "/",
-    //     failureRedirect: "/login",
-    //     throwOnError: true,
-    //     context: { formData },
-    //   });
-    // } else if (checkStatus.status === "rejected") {
-    //   return json({ rejected: "please try again" });
-    // } else {
-    //   return json({ rejected: "Something went wrong, Please try again" });
-    // }
-
-    return null;
-  }
+  return { message, phone };
 };
 
 export default function signIn() {
   const actionData = useActionData();
+  console.log(actionData);
   const { state } = useTransition();
   const busy = state === "submitting";
-  console.log("typdddr", actionData?.status === 500);
-  console.log("und", actionData);
-  console.log("typr", actionData?.status === 400);
+  let m = 1;
 
   return (
     <Box display="flex" justifyContent="center" p={5}>
-      <Box minWidth={500} bgcolor="skyblue" borderRadius={2}>
+      <Box minWidth={500} bgcolor="darkcyan" borderRadius={2}>
         <Form method="post">
-          <Stack spacing={{ xs: 1, sm: 2, md: 3 }} p={3}>
-            {actionData === undefined ||
-            actionData?.status === 404 ||
-            actionData?.status === 500 ? (
-              <>
-                <Typography fontWeight="bold" color="dark" textAlign="center">
-                  Sign In
-                </Typography>
-                <Typography variant="subtitle2" color="error">
-                  {actionData?.rejected}
-                </Typography>
-                <TextField
-                  id="filled-hidden-label-small"
-                  placeholder="Phone"
-                  name="phone"
-                  variant="filled"
-                  size="small"
-                />
-                <Typography variant="subtitle2" color="error">
-                  {actionData?.errors?.phone}
-                </Typography>
-                <input type="hidden" name="_method" value="login" />
-              </>
-            ) : (
-              <>
-                <TextField
-                  id="filled-hidden-label-small"
-                  placeholder="OTP Code"
-                  name="code"
-                  variant="filled"
-                  size="small"
-                />
-                <input type="hidden" name="_method" value="verify" />
-              </>
-            )}
+          <Stack spacing={{ xs: 2, sm: 2, md: 3 }} p={5} gap={2}>
+            <Typography
+              padding={2}
+              fontWeight="bold"
+              color="white"
+              textAlign="center"
+            >
+              Login Now
+            </Typography>
+            <Typography mb={2} variant="subtitle1" color="error">
+              {actionData?.message}
+            </Typography>
+            <TextField
+              id="filled-hidden-label-small"
+              placeholder="Phone"
+              name="phone"
+              variant="filled"
+              size="small"
+              defaultValue={actionData?.phone}
+            />
+            <Typography variant="subtitle2" color="error">
+              {actionData?.errors?.phone}
+            </Typography>
+
             <Button disabled={busy} type="submit" variant="contained">
               {busy ? "Submittting..." : "Login"}
             </Button>
           </Stack>
         </Form>
+        <Stack
+          color="white"
+          direction="row"
+          p={2}
+          justifyContent="space-evenly"
+        >
+          <Link href="signup" color="white" underline="none">
+            Don't have an account ?
+          </Link>
+          <Link href="/login" color="white" underline="none">
+            Forgot Password?
+          </Link>
+        </Stack>
       </Box>
     </Box>
   );
