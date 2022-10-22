@@ -1,41 +1,30 @@
-import type { ZodError, ZodSchema } from "zod";
-import * as Z from "zod";
+import z from "zod";
 
-type ActionErrors<T> = Partial<Record<keyof T, string>>;
-export async function validationAction<ActionInput>({
-  formData,
-  schema,
-}: {
-  formData: FormData;
-  schema: ZodSchema;
-}) {
-  const body = Object.fromEntries(formData);
+const first_name = z.string().min(1, { message: "First name is required" });
+const last_name = z.string().min(1, { message: "Last name is required" });
+const phone = z
+  .string()
+  .min(1, { message: "Phone number is required" })
+  .startsWith("09", {
+    message: "  Phone number start with 09...",
+  });
 
-  try {
-    const formdata = schema.parse(body) as ActionInput;
-    return { formdata, errors: null };
-  } catch (e: any) {
-    const errors = e as ZodError<ActionInput>;
-    return {
-      formdata: body,
-      errors: errors.issues.reduce((acc: ActionErrors<ActionInput>, curr) => {
-        const key = curr.path[0] as keyof ActionInput;
-        acc[key] = curr.message.replace("Invalid enum value. ", "");
-        return acc;
-      }, {}),
-    };
-  }
-}
-
-const first_name = Z.string().min(1, { message: "First name is required" });
-const last_name = Z.string().min(1, { message: "Last name is required" });
-const phone = Z.string().startsWith("09", {
-  message: "Phone number start with 09...",
-});
-export const schema = Z.object({
+const userSchema = z.object({
   first_name,
   last_name,
   phone,
 });
 
-export type ActionInput = Z.TypeOf<typeof schema>;
+export const validRegistration = async (field: any) => {
+  const { success, data, error } = userSchema.safeParse(field) as any;
+  const fieldErrors = error?.flatten().fieldErrors;
+  return { success, data, field, fieldErrors };
+};
+
+export const validLogin = async (field: any) => {
+  const { success, data, error } = userSchema
+    .pick({ phone: true })
+    .safeParse(field) as any;
+  const fieldErrors = error?.flatten().fieldErrors;
+  return { success, data, field, fieldErrors };
+};
