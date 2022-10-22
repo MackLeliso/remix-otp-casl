@@ -110,25 +110,28 @@ export async function RegistrationOtp(phone: string) {
   }
 }
 
-export async function verifyOtp(otpNumber: string) {
+export async function verifyOtp(otpNumber: string, phone: string) {
   try {
+    console.log("mele", phone);
     return await db.$transaction(async (tx) => {
       const getotp = await tx.otp.findUnique({
         where: {
           otpNumber,
         },
       });
-      if (!getotp) return { message: "Invalid OTP Number" };
+      console.log("getotp", getotp);
+      // console.log(getotp?.phone !== phone);
+      if (!getotp) return { otpNumber, message: "Invalid OTP Number" };
+      if (getotp.phone !== phone)
+        return { status: 401, message: "Unauthorized" };
       const checkIfOtpExpired = addMinutes(1, getotp?.updatedAt) < new Date();
       // const checkIfOtpExpired = addHours(5, getotp?.updatedAt) > new Date());
       if (checkIfOtpExpired) return { message: "OTP expired" };
-      const user = await tx.user.findUnique({
-        where: { phone: getotp.phone },
-      });
       await tx.otp.delete({ where: { otpNumber } });
-      return { status: 200, message: "Approved", data: user };
+      return { status: 200, message: "Approved" };
     });
   } catch (error: unknown) {
+    console.log(error);
     return { status: 500, message: "Internal server error" };
   }
 }
