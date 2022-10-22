@@ -1,32 +1,34 @@
 import { Box, Button, Link, Stack, TextField, Typography } from "@mui/material";
-import { ActionFunction, json } from "@remix-run/node";
+import { ActionFunction } from "@remix-run/node";
 import { Form, useTransition, useActionData, Outlet } from "@remix-run/react";
 import { User } from "@prisma/client";
 
 import { RegistrationOtp } from "~/utils/otp.server";
 import { createUserSession } from "~/utils/session.server";
+import { validRegistration } from "~/utils/validation.server";
 
 type RegistrationData = {
   message: string;
   status: number;
 };
+
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
 
-  const { first_name, last_name, phone } = Object.fromEntries(formData) as Pick<
+  const fields = Object.fromEntries(formData) as Pick<
     User,
     "first_name" | "last_name" | "phone"
   >;
-  const { message } = (await RegistrationOtp(phone)) as RegistrationData;
-  if (message === "otp-sent") {
-    return await createUserSession({ first_name, last_name, phone }, `/verify`);
-  }
-  return { message, first_name, last_name, phone };
+  // schema validation
+  const { success, data, field, fieldErrors } = await validRegistration(fields);
+  if (!success) return { field, fieldErrors };
+  const { message } = (await RegistrationOtp(data.phone)) as RegistrationData;
+  if (message === "otp-sent") return await createUserSession(data, `/verify`);
+  return { message };
 };
 
 export default function signup() {
   const actionData = useActionData();
-  console.log("actionData", actionData);
   const { state } = useTransition();
   const busy = state === "submitting";
 
@@ -52,10 +54,10 @@ export default function signup() {
               name="first_name"
               variant="filled"
               size="small"
-              defaultValue={actionData?.first_name}
+              defaultValue={actionData?.field?.first_name}
             />
             <Typography variant="subtitle2" color="error">
-              {actionData?.errors?.first_name}
+              {actionData?.fieldErrors?.first_name}
             </Typography>
             <TextField
               id="filled-hidden-label-small"
@@ -63,10 +65,10 @@ export default function signup() {
               name="last_name"
               variant="filled"
               size="small"
-              defaultValue={actionData?.last_name}
+              defaultValue={actionData?.field?.last_name}
             />
             <Typography variant="subtitle2" color="error">
-              {actionData?.errors?.last_name}
+              {actionData?.fieldErrors?.last_name}
             </Typography>
             <TextField
               id="filled-hidden-label-small"
@@ -74,10 +76,10 @@ export default function signup() {
               name="phone"
               variant="filled"
               size="small"
-              defaultValue={actionData?.phone}
+              defaultValue={actionData?.field?.phone}
             />
             <Typography variant="subtitle2" color="error">
-              {actionData?.errors?.phone}
+              {actionData?.fieldErrors?.phone}
             </Typography>
 
             <Button
