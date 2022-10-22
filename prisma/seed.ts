@@ -5,46 +5,39 @@ const prisma = new PrismaClient();
 async function seed() {
   const role = await prisma.role.create({
     data: {
-      name: "test role",
-      description: "this role take some of action on system",
-      user: {
-        create: {
-          first_name: "mesut",
-          last_name: "ozil",
-          phone: "0924011541",
-        },
-      },
+      name: "product owner role",
+      description: "this role take some of action on the system",
       permission: {
         create: [
           {
             permission: {
               create: {
-                name: "view user",
-                description: "This permission can read all of user on system",
+                name: "view  product",
+                description:
+                  "This permission can read all of product on the system",
                 action: "read",
-                subject: "user",
+                subject: "product",
               },
             },
           },
           {
             permission: {
               create: {
-                name: "update username and password",
-                description: "This permission can only his or her username",
-                action: "update",
-                subject: "user",
-                fields: ["username", "password"],
-                conditions: { id: "userId" },
+                name: "create product",
+                description: "This permission can create product",
+                action: "create",
+                subject: "product",
               },
             },
           },
           {
             permission: {
               create: {
-                name: "delete post",
-                description: "This permission can delete only his or her post",
+                name: "delete his product",
+                description:
+                  "This permission can delete only his or her product",
                 action: "delete",
-                subject: "post",
+                subject: "product",
                 conditions: { id: "userId" },
               },
             },
@@ -54,6 +47,75 @@ async function seed() {
     },
   });
   console.log(role);
+
+  const user = await prisma.user.create({
+    data: {
+      first_name: "leo",
+      last_name: "messi",
+      phone: "0928425097",
+      roleId: role.id,
+    },
+  });
+
+  console.log(user);
+
+  const shoeCat = await prisma.productCategory.create({
+    data: {
+      name: "shoes",
+      description:
+        "this product category can be used to create product on the system",
+    },
+  });
+  const clothCat = await prisma.productCategory.create({
+    data: {
+      name: "cloths",
+      description:
+        "this product category can be used to create product on the system",
+    },
+  });
+
+  const product = await prisma.product.createMany({
+    data: [
+      {
+        name: "vans",
+        description: "made in vetinam",
+        userId: user.id,
+        categoryId: shoeCat.id,
+      },
+      {
+        name: "addids",
+        description: "made in china",
+        userId: user.id,
+        categoryId: shoeCat.id,
+      },
+      {
+        name: "nike",
+        description: "made in ethio",
+        userId: user.id,
+        categoryId: shoeCat.id,
+      },
+      {
+        name: "gucci",
+        description: "made in vetinam",
+        userId: user.id,
+        categoryId: clothCat.id,
+      },
+      {
+        name: "cat",
+        description: "made in china",
+        userId: user.id,
+        categoryId: clothCat.id,
+      },
+      {
+        name: "zara",
+        description: "made in ethio",
+        userId: user.id,
+        categoryId: clothCat.id,
+      },
+    ],
+  });
+
+  console.log(product);
 }
 
 seed()
