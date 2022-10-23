@@ -16,7 +16,7 @@ export const loader: LoaderFunction = async ({ request }) => {
   if (!categories) return null;
 
   // pagination
-  const limit = Number(url.searchParams.get("limit")) || 2;
+  const limit = Number(url.searchParams.get("limit")) || 5;
   const test = Number(url.searchParams.get("offset"));
   const offset = test ? test : 0;
   const skip = limit * offset;

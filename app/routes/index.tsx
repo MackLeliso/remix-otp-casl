@@ -1,7 +1,7 @@
 import { ForbiddenError, subject } from "@casl/ability";
 import { Box, Divider, Typography } from "@mui/material";
 import { json, LoaderFunction, redirect } from "@remix-run/node"; // or cloudflare/deno
-import { useLoaderData } from "@remix-run/react";
+import { Link, useLoaderData } from "@remix-run/react";
 import { userAbility } from "~/utils/defineAbility.server";
 import {
   getSession,
@@ -52,18 +52,47 @@ export default function Index() {
       <Box display="flex" alignItems="center" justifyContent="center">
         <Box
           sx={{
-            padding: 4,
             backgroundColor: "darkcyan",
-            height: "50vh",
-            width: "80vw",
-            borderRadius: "10px",
+            height: "100vh",
+            width: "100vw",
           }}
         >
-          <Typography color="white" variant="h5" sx={{ textAlign: "center" }}>
+          <Typography
+            p={4}
+            color="white"
+            variant="h5"
+            sx={{ textAlign: "center" }}
+          >
             Well come <b>{user?.first_name.toUpperCase()} </b>
             to Remix
           </Typography>
           <Divider sx={{ color: "white" }} />
+          <Box
+            color="whitesmoke"
+            textAlign="center"
+            fontWeight="bold"
+            bgcolor="darkcyan"
+            borderRadius={1}
+            margin="12px"
+            padding="12px"
+            sx={{
+              ":hover": {
+                bgcolor: "whitesmoke",
+                color: "darkcyan",
+                transition: ".5s",
+              },
+            }}
+          >
+            <Link
+              style={{
+                textDecoration: "none",
+                alignSelf: "auto",
+              }}
+              to="product"
+            >
+              Get in to product page
+            </Link>
+          </Box>
         </Box>
       </Box>
     </Box>
