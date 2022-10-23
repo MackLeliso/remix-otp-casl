@@ -30,6 +30,8 @@ function Document({
       </head>
       <body>
         {children}
+        <ScrollRestoration />
+        <Scripts />
         <LiveReload />
       </body>
     </html>

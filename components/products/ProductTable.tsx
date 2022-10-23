@@ -4,14 +4,14 @@ import { GridColumns, DataGrid } from "@mui/x-data-grid";
 
 const columns: GridColumns = [
   {
-    field: "first",
-    headerClassName: "super-app-theme--header",
+    field: "name",
+    headerName: "Name",
     headerAlign: "center",
     width: 140,
   },
   {
-    field: "last",
-    headerClassName: "super-app-theme--header",
+    field: "description",
+    headerName: "Desciption",
     headerAlign: "center",
     width: 140,
   },
@@ -35,7 +35,10 @@ const rows = [
   },
 ];
 
-export default function StylingHeaderGrid() {
+export default function ProductTable({ products }: any) {
+  const [page, setPage] = React.useState(0);
+  console.log(page);
+
   return (
     <Box
       sx={{
@@ -46,7 +49,19 @@ export default function StylingHeaderGrid() {
         },
       }}
     >
-      <DataGrid rows={rows} columns={columns} />
+      <DataGrid
+        rows={products?.map((product: any) => ({
+          id: product.id,
+          name: product.name,
+          description: product.description,
+        }))}
+        columns={columns}
+        page={page}
+        onPageChange={(newPage) => setPage(newPage)}
+        pageSize={5}
+        rowsPerPageOptions={[5]}
+        pagination
+      />
     </Box>
   );
 }
