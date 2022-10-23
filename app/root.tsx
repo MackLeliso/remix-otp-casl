@@ -28,7 +28,7 @@ function Document({
         <title>{title}</title>
         <Links />
       </head>
-      <body>
+      <body style={{ padding: "0", margin: "0", boxSizing: "border-box" }}>
         {children}
         <ScrollRestoration />
         <Scripts />

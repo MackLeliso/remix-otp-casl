@@ -1,24 +1,28 @@
-import { Box, Grid, Link, Divider, TextField, Typography } from "@mui/material";
+import { Box } from "@mui/material";
 import { LoaderFunction } from "@remix-run/node";
-import {
-  useActionData,
-  useLoaderData,
-  useSearchParams,
-  useSubmit,
-  useTransition,
-} from "@remix-run/react";
-import Product from "components/products/Product";
-import ProductTable from "components/products/ProductTable";
-import React, { useEffect, useState } from "react";
+import { useLoaderData, useSearchParams, useSubmit } from "@remix-run/react";
 import { db } from "~/utils/db.server";
+import Category from "components/products/Category";
+import ProductTable from "components/products/ProductTable";
+import Product from "components/products/Product";
 
 export const loader: LoaderFunction = async ({ request }) => {
+  // search for products
   const url = new URL(request.url);
   const name = url.searchParams.getAll("category");
   const search = url.searchParams.getAll("search");
+  // get category
   const categories = await db.productCategory.findMany({});
   if (!categories) return null;
-  const [products, count] = await db.$transaction([
+
+  // pagination
+  const limit = Number(url.searchParams.get("limit")) || 2;
+  const test = Number(url.searchParams.get("offset"));
+  const offset = test ? test : 0;
+  const skip = limit * offset;
+
+  // get products and it's total
+  const [products, totalCount] = await db.$transaction([
     db.product.findMany({
       where: {
         category: {
@@ -28,6 +32,9 @@ export const loader: LoaderFunction = async ({ request }) => {
         },
         name: { contains: search[0] },
       },
+      orderBy: { name: "asc" },
+      skip: skip,
+      take: limit,
       select: {
         id: true,
         category: true,
@@ -37,47 +44,38 @@ export const loader: LoaderFunction = async ({ request }) => {
     }),
     db.product.count(),
   ]);
-  return { products, categories };
+
+  return { products, totalCount, categories };
 };
 
+// products ui components
 export default function Products() {
-  const actionData = useActionData();
-  const { products, categories } = useLoaderData();
+  const { products, totalCount, categories } = useLoaderData();
   const submit = useSubmit();
   const [searchParams, setSearchParams] = useSearchParams();
-  const searchPr = searchParams.getAll("search");
   const category = searchParams.getAll("category");
-  console.log("category", category);
-  console.log("inname", searchParams);
-  submit.bind("john");
-  const { state } = useTransition();
-  const busy = state === "submitting";
-  const [search, setSearch] = useState("");
-  function handleChange(event: any) {
-    submit(event.currentTarget.value);
-  } // console.log("bbbbbbbbb", search);
-  // useEffect(() => {
-  //   setSearchParams({ searchs: search });
-  // }, [setSearchParams]);
-  // console.log("meleeeeeee", searchParams);
 
-  const handleSubmit = (e: any) => {
-    submit(e.target.form);
-  };
-
-  const [pageSize, setPageSize] = React.useState<number>(5);
   return (
-    <Box display="flex" justifyContent="center" p={5}>
-      <Box minWidth={1000} bgcolor="darkcyan" borderRadius={2}>
-        <Product
-          categories={categories}
+    <Box
+      minWidth="100vw"
+      minHeight="100vh"
+      bgcolor="darkcyan"
+      display="flex"
+      justifyContent="space-evenly"
+    >
+      <Box minWidth="18vw">
+        <Category categories={categories} submit={submit} />
+      </Box>
+
+      <Box minWidth="48vw">
+        <Product categories={categories} products={products} submit={submit} />
+      </Box>
+      <Box minWidth="25vw">
+        <ProductTable
           products={products}
-          handleChange={handleChange}
           submit={submit}
+          totalCount={totalCount}
         />
-        <Box minWidth={500}>
-          <ProductTable products={products} />
-        </Box>
       </Box>
     </Box>
   );

@@ -1,7 +1,10 @@
 import * as React from "react";
 import Box from "@mui/material/Box";
 import { GridColumns, DataGrid } from "@mui/x-data-grid";
+import { Form } from "@remix-run/react";
+import { TextField } from "@mui/material";
 
+// columns of the grid
 const columns: GridColumns = [
   {
     field: "name",
@@ -17,38 +20,50 @@ const columns: GridColumns = [
   },
 ];
 
-const rows = [
-  {
-    id: 1,
-    first: "Jane",
-    last: "Carter",
-  },
-  {
-    id: 2,
-    first: "Jack",
-    last: "Smith",
-  },
-  {
-    id: 3,
-    first: "Gill",
-    last: "Martin",
-  },
-];
-
-export default function ProductTable({ products }: any) {
+// product table components
+export default function ProductTable({ products, totalCount, submit }: any) {
   const [page, setPage] = React.useState(0);
-  console.log(page);
+  const [pageSize, setPageSize] = React.useState(2);
+  const queryOptions = React.useMemo(
+    () => ({
+      page,
+      pageSize,
+    }),
+    [page, pageSize]
+  );
+  const [rowCountState, setRowCountState] = React.useState(totalCount || 0);
+  React.useEffect(() => {
+    setRowCountState((prevRowCountState: any) =>
+      totalCount !== undefined ? totalCount : prevRowCountState
+    );
+  }, [totalCount, setRowCountState]);
+
+  React.useEffect(() => {
+    submit({ offset: page, limit: pageSize });
+  }, [page, pageSize]);
 
   return (
     <Box
       sx={{
-        height: 300,
+        height: 350,
         width: "100%",
-        "& .super-app-theme--header": {
-          backgroundColor: "rgba(255, 7, 0, 0.55)",
-        },
+        display: "flex",
+        justifyContent: "center",
+        flexDirection: "column",
       }}
     >
+      <Form method="get" onChange={(e) => submit(e.currentTarget)}>
+        <TextField
+          sx={{
+            display: "flex",
+            alignItems: "flex-end",
+            padding: "20px",
+          }}
+          name="search"
+          variant="standard"
+          placeholder="Search"
+        />
+      </Form>
       <DataGrid
         rows={products?.map((product: any) => ({
           id: product.id,
@@ -56,11 +71,15 @@ export default function ProductTable({ products }: any) {
           description: product.description,
         }))}
         columns={columns}
-        page={page}
-        onPageChange={(newPage) => setPage(newPage)}
-        pageSize={5}
-        rowsPerPageOptions={[5]}
+        rowCount={rowCountState}
+        rowsPerPageOptions={[2, 3, 5]}
+        paginationMode="server"
         pagination
+        page={page}
+        pageSize={pageSize}
+        onPageChange={(newPage) => setPage(newPage)}
+        onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
+        // initialState={initialState}
       />
     </Box>
   );
