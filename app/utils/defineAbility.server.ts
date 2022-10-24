@@ -10,9 +10,16 @@ interface RawRule {
 
 export const userAbility = async (auth: any) => {
   const { id } = auth;
-  const user = await db.user.findFirst({
+  const user = await db.user.findUnique({
     where: { id },
+    include: { products: true },
   });
+
+  const productsId = user?.products.map((product) => product.id);
+  const permConditions: any = {
+    id,
+    productId: { $in: productsId },
+  };
 
   const userPermissions = await db.role.findUnique({
     where: { id: user?.roleId },
@@ -50,8 +57,8 @@ export const userAbility = async (auth: any) => {
     console.log(object.conditions);
     if (object.conditions) {
       for (var key in object.conditions) {
-        if (key in auth) {
-          object.conditions[key] = auth[key];
+        if (key in permConditions) {
+          object.conditions[key] = permConditions[key];
         }
       }
     }

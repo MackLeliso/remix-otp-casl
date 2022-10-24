@@ -38,7 +38,7 @@ async function seed() {
                   "This permission can delete only his or her product",
                 action: "delete",
                 subject: "product",
-                conditions: { id: "userId" },
+                conditions: { id: "userId", productId: "productId" },
               },
             },
           },

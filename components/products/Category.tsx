@@ -1,4 +1,4 @@
-import { Box, Grid } from "@mui/material";
+import { Box } from "@mui/material";
 import { Link } from "@remix-run/react";
 
 //  product category  component
@@ -24,6 +24,7 @@ export default function Category({ categories }: any) {
           }}
         >
           <Link
+            id={category.id}
             style={{
               textDecoration: "none",
               alignSelf: "auto",
