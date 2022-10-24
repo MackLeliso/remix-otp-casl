@@ -22,7 +22,6 @@ export const action: ActionFunction = async ({ context, request }) => {
   // schema validation
   const { success, data, field, fieldErrors } = await validLogin(fields);
   if (!success) return { field, fieldErrors };
-  if (!success) return { field, fieldErrors };
   const { message } = (await loginOtp(data.phone)) as LoginData;
   if (message === "otp-sent")
     return await createUserSession({ phone: data.phone }, `/verify`);
