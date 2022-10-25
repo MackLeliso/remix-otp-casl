@@ -19,7 +19,7 @@ import { Form } from "@remix-run/react";
 import { Button, TextField } from "@mui/material";
 import { Add, Cancel, Delete, Edit, Save } from "@mui/icons-material";
 import { db } from "~/utils/db.server";
-import { deleteProduct } from "~/utils/product.server";
+import { deleteProduct, updateProduct } from "~/utils/product.server";
 import { string } from "zod";
 
 // columns of the grid
@@ -114,18 +114,23 @@ export default function ProductTable({
     event.defaultMuiPrevented = true;
   };
 
-  const handleEditClick = async (id: any) => {
+  const handleEditClick = (id: any) => async () => {
     console.log("edit", id);
-    return await deleteProduct(id);
+    // React.useEffect(() => {
+    //   return await updateProduct(id);
+    // }, [id]);
   };
 
   const handleSaveClick = (id: GridRowId) => () => {
     setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
   };
 
-  const handleDeleteClick = async (id: GridRowId) => {
-    console.log("delte", id);
-    return await deleteProduct(id);
+  const handleDeleteClick = (id: GridRowId) => async () => {
+    console.log("delete", id);
+    // React.useEffect(() => {
+    const resp = await deleteProduct(id);
+    console.log(resp);
+    return resp;
   };
 
   const handleCancelClick = (id: GridRowId) => () => {

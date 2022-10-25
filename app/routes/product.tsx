@@ -20,14 +20,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     "read",
     "product"
   );
-  const deleteOwnProduct = (await userAbility(auth)).can(
-    "delete",
-    subject("product", {
-      id: auth.id,
-      productId: ["6f65f860-5862-4f9b-aaa5-fc642a77ba98d"],
-      z,
-    })
-  );
+  const deleteOwnProduct = (await userAbility(auth)).can("delete", "product");
   console.log("deleteOwnProduct", deleteOwnProduct);
   return json({ user, deleteOwnProduct });
 };
