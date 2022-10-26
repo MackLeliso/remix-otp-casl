@@ -20,22 +20,6 @@ import { Button, TextField, Typography } from "@mui/material";
 import { Add, Cancel, Delete, Edit, Save } from "@mui/icons-material";
 import { userAbility } from "~/utils/defineAbility.server";
 
-// columns of the grid
-export const deleteAbility = async (id: any) => {
-  const [able, setAble] = React.useState(false);
-  React.useEffect(() => {
-    const ability = async () => {
-      console.log("dd", id);
-      const ab = await (
-        await userAbility("408449cf-016e-423b-ba25-34ab5eeac9d2")
-      ).can("delete", "product");
-      setAble(ab);
-    };
-    ability();
-  }, []);
-
-  // console.log("del", del);
-};
 // product table components
 export default function ProductTable({
   products,
