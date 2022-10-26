@@ -9,7 +9,11 @@ import {
 import { db } from "~/utils/db.server";
 import Category from "components/products/Category";
 import ProductTable from "components/products/ProductTable";
+import { getUserData } from "~/utils/session.server";
+import { userAbility } from "~/utils/defineAbility.server";
+import { subject } from "@casl/ability";
 export const loader: LoaderFunction = async ({ request }) => {
+  const { id } = await getUserData(request);
   // search for products
   const url = new URL(request.url);
   const name = url.searchParams.getAll("category");
@@ -25,15 +29,16 @@ export const loader: LoaderFunction = async ({ request }) => {
   if (!categories) return null;
 
   // pagination
-  const limit = Number(url.searchParams.get("limit")) || 2;
+  const limit = Number(url.searchParams.get("limit")) || 3;
   const test = Number(url.searchParams.get("offset"));
   const offset = test ? test : 0;
   const skip = limit * offset;
 
   // get products and it's total
-  const [products, totalCount] = await db.$transaction([
+  const [productList, totalCount] = await db.$transaction([
     db.product.findMany({
       where: {
+        delete: false,
         category: {
           name: {
             contains: name[0],
@@ -45,8 +50,17 @@ export const loader: LoaderFunction = async ({ request }) => {
       skip: skip,
       take: limit,
     }),
-    db.product.count(),
+    db.product.count({
+      where: { delete: false },
+    }),
   ]);
+  const prod = productList.map(async (product) => ({
+    ...product,
+    canDelete: await (
+      await userAbility(id)
+    ).can("delete", subject("product", { id: id, productId: product.id })),
+  }));
+  const products = await Promise.all(prod);
   return { products, totalCount, categories };
 };
 

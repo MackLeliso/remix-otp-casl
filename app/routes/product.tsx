@@ -14,20 +14,25 @@ export const loader: LoaderFunction = async ({ request }) => {
 
   const deletePID = url.searchParams.getAll("deletePID")[0];
   if (deletePID) {
-    const productAbility = await (
-      await userAbility(id)
-    ).can("delete", subject("product", { id: id, productId: deletePID }));
-    if (productAbility) {
-      await db.product.delete({
-        where: { id: deletePID },
+    return await db.$transaction(async () => {
+      const getProduct = await db.product.findFirst({
+        where: {
+          id: deletePID,
+          delete: false,
+        },
       });
+      if (!getProduct)
+        return json({ status: 404, message: "Product not found" });
+      await db.product.update({
+        where: { id: deletePID },
+        data: { delete: true },
+      });
+
       return json({
         status: 200,
         message: "Successfully product is deleted",
       });
-    } else {
-      return json({ status: 401, message: "You can't delete product" });
-    }
+    });
   }
 
   return null;

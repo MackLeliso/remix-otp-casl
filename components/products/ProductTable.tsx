@@ -21,7 +21,21 @@ import { Add, Cancel, Delete, Edit, Save } from "@mui/icons-material";
 import { userAbility } from "~/utils/defineAbility.server";
 
 // columns of the grid
+export const deleteAbility = async (id: any) => {
+  const [able, setAble] = React.useState(false);
+  React.useEffect(() => {
+    const ability = async () => {
+      console.log("dd", id);
+      const ab = await (
+        await userAbility("408449cf-016e-423b-ba25-34ab5eeac9d2")
+      ).can("delete", "product");
+      setAble(ab);
+    };
+    ability();
+  }, []);
 
+  // console.log("del", del);
+};
 // product table components
 export default function ProductTable({
   products,
@@ -31,9 +45,8 @@ export default function ProductTable({
   user,
   message,
 }: any) {
-  console.log(message);
   const [page, setPage] = React.useState(0);
-  const [pageSize, setPageSize] = React.useState(2);
+  const [pageSize, setPageSize] = React.useState(3);
   const [filter, setFilter] = React.useState();
   const [sort, setSort] = React.useState();
   const [rows, setRows] = React.useState(products);
@@ -170,8 +183,10 @@ export default function ProductTable({
       headerName: "Actions",
       width: 100,
       cellClassName: "actions",
-      getActions: ({ id }) => {
+      getActions: ({ row }) => {
+        const { id, canDelete } = row;
         const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
+        console.log("isInEditMode: " + isInEditMode);
         if (isInEditMode) {
           return [
             <GridActionsCellItem
@@ -197,12 +212,18 @@ export default function ProductTable({
             onClick={handleEditClick(id)}
             color="inherit"
           />,
-          <GridActionsCellItem
-            icon={<Delete />}
-            label="Delete"
-            onClick={handleDeleteClick(id)}
-            color="inherit"
-          />,
+          <>
+            {canDelete ? (
+              <GridActionsCellItem
+                icon={<Delete color="error" />}
+                label="Delete"
+                onClick={handleDeleteClick(id)}
+                color="inherit"
+              />
+            ) : (
+              ""
+            )}
+          </>,
         ];
       },
     },
