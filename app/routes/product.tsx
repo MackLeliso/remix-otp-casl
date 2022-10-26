@@ -8,32 +8,11 @@ import { getUserData } from "~/utils/session.server";
 
 export const loader: LoaderFunction = async ({ request }) => {
   const { id } = await getUserData(request);
-  if (!id) return redirect("/login");
-  ForbiddenError.from(await userAbility(id)).throwUnlessCan("read", "product");
-  const url = new URL(request.url);
-
-  const deletePID = url.searchParams.getAll("deletePID")[0];
-  if (deletePID) {
-    return await db.$transaction(async () => {
-      const getProduct = await db.product.findFirst({
-        where: {
-          id: deletePID,
-          delete: false,
-        },
-      });
-      if (!getProduct)
-        return json({ status: 404, message: "Product not found" });
-      await db.product.update({
-        where: { id: deletePID },
-        data: { delete: true },
-      });
-
-      return json({
-        status: 200,
-        message: "Successfully product is deleted",
-      });
-    });
-  }
+  const check = await userAbility(id);
+  if (!check.rulesFor) return redirect("/login");
+  ForbiddenError.from(await userAbility(id))
+    .setMessage("You can't access this information")
+    .throwUnlessCan("read", "product");
 
   return null;
 };
@@ -67,8 +46,8 @@ export default function Products() {
 
 export function ErrorBoundary({ error }: { error: Error }) {
   return (
-    <Box bgcolor="red">
-      <Box p={5}>
+    <Box p={5} display="flex" justifyContent="center">
+      <Box bgcolor="red" p={5} minWidth={500} borderRadius={2}>
         <h1>App Error</h1>
         <pre>{error.message}</pre>
       </Box>

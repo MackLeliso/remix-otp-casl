@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import { LoaderFunction } from "@remix-run/node";
+import { json, LoaderFunction, redirect } from "@remix-run/node";
 import {
   useLoaderData,
   useOutletContext,
@@ -14,6 +14,7 @@ import { userAbility } from "~/utils/defineAbility.server";
 import { subject } from "@casl/ability";
 export const loader: LoaderFunction = async ({ request }) => {
   const { id } = await getUserData(request);
+
   // search for products
   const url = new URL(request.url);
   const name = url.searchParams.getAll("category");
@@ -23,16 +24,17 @@ export const loader: LoaderFunction = async ({ request }) => {
   const value = url.searchParams.getAll("value")[0] || "";
   const field = url.searchParams.getAll("field")[0] || "name";
   const sort = url.searchParams.getAll("sort")[0] || "asc";
-
-  // get category
-  const categories = await db.productCategory.findMany({});
-  if (!categories) return null;
+  const deletePID = url.searchParams.getAll("deletePID")[0];
 
   // pagination
   const limit = Number(url.searchParams.get("limit")) || 3;
   const test = Number(url.searchParams.get("offset"));
   const offset = test ? test : 0;
   const skip = limit * offset;
+
+  // get category
+  const categories = await db.productCategory.findMany({});
+  if (!categories) return null;
 
   // get products and it's total
   const [productList, totalCount] = await db.$transaction([
@@ -54,6 +56,27 @@ export const loader: LoaderFunction = async ({ request }) => {
       where: { delete: false },
     }),
   ]);
+  let message;
+  if (deletePID) {
+    message = await db.$transaction(async () => {
+      const getProduct = await db.product.findFirst({
+        where: {
+          id: deletePID,
+          delete: false,
+        },
+      });
+      if (!getProduct) return { status: 404, message: "Product not found" };
+      await db.product.update({
+        where: { id: deletePID },
+        data: { delete: true },
+      });
+      return {
+        status: 200,
+        message: "Successfully product is deleted",
+      };
+    });
+  }
+
   const prod = productList.map(async (product) => ({
     ...product,
     canDelete: await (
@@ -61,13 +84,13 @@ export const loader: LoaderFunction = async ({ request }) => {
     ).can("delete", subject("product", { id: id, productId: product.id })),
   }));
   const products = await Promise.all(prod);
-  return { products, totalCount, categories };
+  return json({ products, totalCount, categories, message });
 };
 
 // products ui components
 export default function Products() {
-  const message = useOutletContext();
-  const { products, totalCount, categories } = useLoaderData();
+  const { products, totalCount, categories, message } = useLoaderData();
+  console.log("fff", message);
   const submit = useSubmit();
   const [searchParams, setSearchParams] = useSearchParams();
   const category = searchParams.getAll("category");

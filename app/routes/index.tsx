@@ -9,8 +9,9 @@ type LoaderData = {
 };
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const userData = await getUserData(request);
-  if (!userData) return redirect("/login");
+  const { id } = await getUserData(request);
+  const check = await userAbility(id);
+  if (!check.rulesFor) return redirect("/login");
   const user = await getUser(request);
 
   // ForbiddenError.from(await userAbility(id)).throwUnlessCan("read", "user");

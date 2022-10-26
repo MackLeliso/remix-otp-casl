@@ -21,7 +21,6 @@ authenticator.use(
     let user: any;
     if (userData) {
       user = await createUser(userData);
-      console.log("user", user);
       return await Promise.resolve(user);
     }
     if (phone) {
