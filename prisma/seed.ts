@@ -95,6 +95,24 @@ async function seed() {
         categoryId: shoeCat.id,
       },
       {
+        name: "jeep",
+        description: "made in vetinam",
+        userId: user.id,
+        categoryId: shoeCat.id,
+      },
+      {
+        name: "gucci",
+        description: "made in china",
+        userId: user.id,
+        categoryId: shoeCat.id,
+      },
+      {
+        name: "cotex",
+        description: "made in ethio",
+        userId: user.id,
+        categoryId: shoeCat.id,
+      },
+      {
         name: "gucci",
         description: "made in vetinam",
         userId: user.id,
@@ -108,6 +126,24 @@ async function seed() {
       },
       {
         name: "zara",
+        description: "made in ethio",
+        userId: user.id,
+        categoryId: clothCat.id,
+      },
+      {
+        name: "brand",
+        description: "made in vetinam",
+        userId: user.id,
+        categoryId: clothCat.id,
+      },
+      {
+        name: "cotex cloth",
+        description: "made in china",
+        userId: user.id,
+        categoryId: clothCat.id,
+      },
+      {
+        name: "nike cloth ",
         description: "made in ethio",
         userId: user.id,
         categoryId: clothCat.id,
