@@ -2,34 +2,43 @@ import { ForbiddenError, subject } from "@casl/ability";
 import { Box, Divider, Typography } from "@mui/material";
 import { json, LoaderFunction, redirect } from "@remix-run/node";
 import { Outlet, useLoaderData } from "@remix-run/react";
+import { db } from "~/utils/db.server";
 import { userAbility } from "~/utils/defineAbility.server";
-import { getUser, getUserData } from "~/utils/session.server";
-
-type LoaderData = {
-  user: Awaited<ReturnType<typeof getUser>>;
-};
+import { getUserData } from "~/utils/session.server";
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const auth = await getUserData(request);
-  if (!auth) return redirect("/login");
-  const user = await getUser(request);
-  const data: LoaderData = {
-    user,
-  };
-  ForbiddenError.from(await userAbility(auth)).throwUnlessCan(
-    "read",
-    "product"
-  );
-  const deleteOwnProduct = (await userAbility(auth)).can("delete", "product");
-  console.log("deleteOwnProduct", deleteOwnProduct);
-  return json({ user, deleteOwnProduct });
+  const { id } = await getUserData(request);
+  if (!id) return redirect("/login");
+  ForbiddenError.from(await userAbility(id)).throwUnlessCan("read", "product");
+  const url = new URL(request.url);
+
+  const deletePID = url.searchParams.getAll("deletePID")[0];
+  if (deletePID) {
+    const productAbility = await (
+      await userAbility(id)
+    ).can("delete", subject("product", { id: id, productId: deletePID }));
+    if (productAbility) {
+      await db.product.delete({
+        where: { id: deletePID },
+      });
+      return json({
+        status: 200,
+        message: "Successfully product is deleted",
+      });
+    } else {
+      return json({ status: 401, message: "You can't delete product" });
+    }
+  }
+
+  return null;
 };
 
 //  products user interfce
 export default function Products() {
-  const { deleteOwnProduct } = useLoaderData();
+  const message = useLoaderData();
   return (
     <Box bgcolor="darkcyan" position="absolute">
+      {/* {productAbility.can("delete", "product")} */}
       <Typography
         textAlign="center"
         p={3}
@@ -46,7 +55,7 @@ export default function Products() {
           margin: "0 25px",
         }}
       />
-      <Outlet context={deleteOwnProduct} />
+      <Outlet context={message} />
     </Box>
   );
 }

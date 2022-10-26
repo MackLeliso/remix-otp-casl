@@ -16,11 +16,9 @@ import {
   GridRowModel,
 } from "@mui/x-data-grid";
 import { Form } from "@remix-run/react";
-import { Button, TextField } from "@mui/material";
+import { Button, TextField, Typography } from "@mui/material";
 import { Add, Cancel, Delete, Edit, Save } from "@mui/icons-material";
-import { db } from "~/utils/db.server";
-import { deleteProduct, updateProduct } from "~/utils/product.server";
-import { string } from "zod";
+import { userAbility } from "~/utils/defineAbility.server";
 
 // columns of the grid
 
@@ -30,12 +28,15 @@ export default function ProductTable({
   totalCount,
   submit,
   category,
+  user,
+  message,
 }: any) {
-  console.log("product table component", products);
+  console.log(message);
   const [page, setPage] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(2);
   const [filter, setFilter] = React.useState();
   const [sort, setSort] = React.useState();
+  const [rows, setRows] = React.useState(products);
   const [rowModesModel, setRowModesModel] = React.useState<GridRowModesModel>(
     {}
   );
@@ -51,7 +52,7 @@ export default function ProductTable({
     const { setRows, setRowModesModel } = props;
 
     const handleClick = () => {
-      const id = "id";
+      const id = uuid();
       setRows((oldRows) => [
         ...oldRows,
         { id, name: "", age: "", isNew: true },
@@ -71,8 +72,6 @@ export default function ProductTable({
     );
   }
   // console.log("roe", rows);
-
-  console.log("rowModesModel", rowModesModel);
 
   React.useMemo(
     () => ({
@@ -116,9 +115,7 @@ export default function ProductTable({
 
   const handleEditClick = (id: any) => async () => {
     console.log("edit", id);
-    // React.useEffect(() => {
-    //   return await updateProduct(id);
-    // }, [id]);
+    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
   };
 
   const handleSaveClick = (id: GridRowId) => () => {
@@ -126,11 +123,7 @@ export default function ProductTable({
   };
 
   const handleDeleteClick = (id: GridRowId) => async () => {
-    console.log("delete", id);
-    // React.useEffect(() => {
-    const resp = await deleteProduct(id);
-    console.log(resp);
-    return resp;
+    submit({ deletePID: id }, { replace: false });
   };
 
   const handleCancelClick = (id: GridRowId) => () => {
@@ -179,7 +172,6 @@ export default function ProductTable({
       cellClassName: "actions",
       getActions: ({ id }) => {
         const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
-
         if (isInEditMode) {
           return [
             <GridActionsCellItem
@@ -219,8 +211,8 @@ export default function ProductTable({
   return (
     <Box
       sx={{
-        height: 350,
-        width: "100%",
+        height: 500,
+        width: "95%",
         display: "flex",
         justifyContent: "center",
         flexDirection: "column",
@@ -243,12 +235,7 @@ export default function ProductTable({
       </Form>
       <DataGrid
         components={{ Toolbar: GridToolbar }}
-        rows={products?.map((product: any) => ({
-          id: product?.id,
-          name: product?.name,
-          description: product?.description,
-          createdAt: product?.createdAt,
-        }))}
+        rows={products}
         columns={columns}
         rowCount={rowCountState}
         rowsPerPageOptions={[2, 3, 5]}
@@ -272,11 +259,14 @@ export default function ProductTable({
         components={{
           Toolbar: EditToolbar,
         }}
-        // componentsProps={{
-        //   toolbar: { setRows, setRowModesModel },
-        // }}
+        componentsProps={{
+          toolbar: { setRows, setRowModesModel },
+        }}
         experimentalFeatures={{ newEditingApi: true }}
       />
+      <Typography p={2} color={message?.status === 200 ? "green" : "red"}>
+        {message?.message}
+      </Typography>
     </Box>
   );
 }

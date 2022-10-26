@@ -1,17 +1,13 @@
 import { db } from "./db.server";
 
-export const createProduct = async (id: any) => {};
-export const updateProduct = async (id: any) => {};
+export const createProduct = async (id: string) => {};
+export const updateProduct = async (id: string) => {};
 
-export async function deleteProduct(id: string) {
-  console.log("productI", id);
-  return new Promise(async function (resolve, reject) {
-    console.log("dddd", id);
-
-    const product = await db.product.delete({
-      where: { id },
-    });
+export const deleteProduct = async () => {
+  try {
+    const product = await db.product.findMany();
     console.log("product deleted", product);
-    resolve(product);
-  });
-}
+  } catch (error) {
+    console.log("error", error);
+  }
+};

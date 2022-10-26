@@ -8,8 +8,7 @@ interface RawRule {
   condition?: any;
 }
 
-export const userAbility = async (auth: any) => {
-  const { id } = auth;
+export const userAbility = async (id: string) => {
   const user = await db.user.findUnique({
     where: { id },
     include: { products: true },
@@ -54,7 +53,6 @@ export const userAbility = async (auth: any) => {
   }
 
   permission.findIndex((object) => {
-    console.log(object.conditions);
     if (object.conditions) {
       for (var key in object.conditions) {
         if (key in permConditions) {

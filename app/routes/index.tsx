@@ -1,38 +1,28 @@
-import { ForbiddenError, subject } from "@casl/ability";
 import { Box, Divider, Typography } from "@mui/material";
 import { json, LoaderFunction, redirect } from "@remix-run/node"; // or cloudflare/deno
 import { Link, useLoaderData } from "@remix-run/react";
 import { userAbility } from "~/utils/defineAbility.server";
-import {
-  getSession,
-  getUser,
-  getUserData,
-  logout,
-} from "~/utils/session.server";
+import { getUser, getUserData } from "~/utils/session.server";
 
 type LoaderData = {
   user: Awaited<ReturnType<typeof getUser>>;
 };
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const auth = await getUserData(request);
-  console.log(auth);
-  if (!auth) return redirect("/login");
+  const userData = await getUserData(request);
+  if (!userData) return redirect("/login");
   const user = await getUser(request);
-  const data: LoaderData = {
-    user,
-  };
 
-  // ForbiddenError.from(await userAbility(auth)).throwUnlessCan("read", "user");
+  // ForbiddenError.from(await userAbility(id)).throwUnlessCan("read", "user");
 
-  // const user = (await userAbility(auth)).can("read", "user");
-  // const post = (await userAbility(auth)).can(
+  // const user = (await userAbility(id)).can("read", "user");
+  // const post = (await userAbility(id)).can(
   //   "delete",
-  //   subject("post", { id: auth.id })
+  //   subject("post", { id: id})
   // );
-  // const comment = (await userAbility(auth)).can("read", "comment");
-  // const role = (await userAbility(auth)).can("read", "role");
-  // const permission = (await userAbility(auth)).can("read", "permission");
+  // const comment = (await userAbility(id)).can("read", "comment");
+  // const role = (await userAbility(id)).can("read", "role");
+  // const permission = (await userAbility(id)).can("read", "permission");
   // const permissions = {
   //   user,
   //   // post,
