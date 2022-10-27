@@ -1,6 +1,11 @@
-import { Box, Divider, Typography } from "@mui/material";
-import { json, LoaderFunction, redirect } from "@remix-run/node"; // or cloudflare/deno
-import { Link, useLoaderData } from "@remix-run/react";
+import { Box, Button, Divider, Typography } from "@mui/material";
+import {
+  ActionFunction,
+  json,
+  LoaderFunction,
+  redirect,
+} from "@remix-run/node"; // or cloudflare/deno
+import { Form, Link, useLoaderData } from "@remix-run/react";
 import { userAbility } from "~/utils/defineAbility.server";
 import { getUser, getUserData } from "~/utils/session.server";
 
@@ -9,35 +14,18 @@ type LoaderData = {
 };
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const { id } = await getUserData(request);
-  const check = await userAbility(id);
-  if (!check.rulesFor) return redirect("/login");
+  const userData = await getUserData(request);
+  if (!userData) return redirect("/login");
+  const checkAbility = await userAbility(userData?.id);
+  if (!checkAbility) return redirect("/login");
   const user = await getUser(request);
-
-  // ForbiddenError.from(await userAbility(id)).throwUnlessCan("read", "user");
-
-  // const user = (await userAbility(id)).can("read", "user");
-  // const post = (await userAbility(id)).can(
-  //   "delete",
-  //   subject("post", { id: id})
-  // );
-  // const comment = (await userAbility(id)).can("read", "comment");
-  // const role = (await userAbility(id)).can("read", "role");
-  // const permission = (await userAbility(id)).can("read", "permission");
-  // const permissions = {
-  //   user,
-  //   // post,
-  //   // role,
-  //   // permission,
-  //   // comment,
-  // };
-
-  // return json({ permission: permissions, auth: auth });
   return json({ user });
 };
+
+export const action: ActionFunction = () => {};
+
 export default function Index() {
   const { user } = useLoaderData<LoaderData>();
-
   return (
     <Box>
       <Box display="flex" alignItems="center" justifyContent="center">
@@ -48,15 +36,36 @@ export default function Index() {
             width: "100vw",
           }}
         >
-          <Typography
-            p={4}
-            color="white"
-            variant="h5"
-            sx={{ textAlign: "center" }}
-          >
-            Well come <b>{user?.first_name.toUpperCase()} </b>
-            to Remix
-          </Typography>
+          <Box display="flex" justifyContent="space-around">
+            <Typography
+              p={4}
+              color="white"
+              variant="h5"
+              sx={{ textAlign: "center" }}
+            >
+              Well come <b>{user?.first_name.toUpperCase()} </b>
+              to Remix
+            </Typography>
+            <Form method="post" action="/logout">
+              <Button
+                sx={{
+                  fontWeight: "bold",
+                  color: "darkcyan",
+                  mt: "20px",
+                  backgroundColor: "whitesmoke",
+                  ":hover": {
+                    border: "1px solid whitesmoke ",
+                    backgroundColor: "darkcyan",
+                    color: "whitesmoke",
+                  },
+                }}
+                type="submit"
+                variant="contained"
+              >
+                Logout
+              </Button>
+            </Form>
+          </Box>
           <Divider sx={{ color: "white" }} />
           <Box
             color="whitesmoke"
@@ -87,47 +96,6 @@ export default function Index() {
         </Box>
       </Box>
     </Box>
-
-    /* <ul>
-        {permission?.user ? (
-          <li>
-            <a href="." rel="noreferrer">
-              <p>user</p>
-            </a>
-          </li>
-        ) : null}
-        {permission?.role ? (
-          <li>
-            <a href="." rel="noreferrer">
-              <p> role</p>
-            </a>
-          </li>
-        ) : null}
-
-        {permission?.permission ? (
-          <li>
-            <a href="." rel="noreferrer">
-              <p>permission</p>
-            </a>
-          </li>
-        ) : null}
-
-        {permission?.post ? (
-          <li>
-            <a href="." rel="noreferrer">
-              <p> delete post</p>
-            </a>
-          </li>
-        ) : null}
-
-        {permission?.comment ? (
-          <li>
-            <a href="." rel="noreferrer">
-              <p>comment</p>
-            </a>
-          </li>
-        ) : null}
-      </ul> */
   );
 }
 
