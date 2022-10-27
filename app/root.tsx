@@ -37,11 +37,14 @@ function Document({
     </html>
   );
 }
+import { SnackbarProvider } from "notistack";
 
 export default function App() {
   return (
     <Document>
-      <Outlet />
+      <SnackbarProvider maxSnack={3}>
+        <Outlet />
+      </SnackbarProvider>
     </Document>
   );
 }
