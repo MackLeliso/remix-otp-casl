@@ -1,5 +1,6 @@
 import z from "zod";
 
+const id = z.string().uuid();
 const first_name = z.string().min(1, { message: "First name is required" });
 const last_name = z.string().min(1, { message: "Last name is required" });
 const phone = z
@@ -8,11 +9,23 @@ const phone = z
   .startsWith("09", {
     message: "  Phone number start with 09...",
   });
+const name = z.string().min(1, { message: "First name is required" });
+const description = z
+  .string()
+  .min(1, { message: "Description name is required" });
+const price = z.string().min(1, { message: "Price name is required" });
 
 const userSchema = z.object({
   first_name,
   last_name,
   phone,
+});
+
+const productShema = z.object({
+  name,
+  description,
+  price,
+  categoryId: id,
 });
 
 export const validRegistration = async (field: any) => {
@@ -25,6 +38,12 @@ export const validLogin = async (field: any) => {
   const { success, data, error } = userSchema
     .pick({ phone: true })
     .safeParse(field) as any;
+  const fieldErrors = error?.flatten().fieldErrors;
+  return { success, data, field, fieldErrors };
+};
+
+export const validProduct = async (field: any) => {
+  const { success, data, error } = productShema.safeParse(field) as any;
   const fieldErrors = error?.flatten().fieldErrors;
   return { success, data, field, fieldErrors };
 };
