@@ -1,6 +1,6 @@
 import z from "zod";
 
-const id = z.string().uuid();
+const id = z.string().uuid().optional();
 const first_name = z.string().min(1, { message: "First name is required" });
 const last_name = z.string().min(1, { message: "Last name is required" });
 const phone = z
@@ -26,6 +26,7 @@ const productShema = z.object({
   description,
   price,
   categoryId: id,
+  id,
 });
 
 export const validRegistration = async (field: any) => {
