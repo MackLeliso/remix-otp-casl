@@ -1,8 +1,8 @@
 import { Box } from "@mui/material";
-import { json, LoaderFunction, redirect } from "@remix-run/node";
+import { ActionFunction, json, LoaderFunction } from "@remix-run/node";
 import {
+  useActionData,
   useLoaderData,
-  useOutletContext,
   useSearchParams,
   useSubmit,
 } from "@remix-run/react";
@@ -12,10 +12,16 @@ import ProductTable from "components/products/ProductTable";
 import { getUserData } from "~/utils/session.server";
 import { userAbility } from "~/utils/defineAbility.server";
 import { subject } from "@casl/ability";
+import { validProduct } from "~/utils/validation.server";
+import {
+  createProduct,
+  deleteProduct,
+  getProducts,
+} from "~/utils/product.server";
 export const loader: LoaderFunction = async ({ request }) => {
   const { id } = await getUserData(request);
 
-  // search for products
+  // search for products params
   const url = new URL(request.url);
   const name = url.searchParams.getAll("category");
   const search = url.searchParams.getAll("search");
@@ -24,6 +30,7 @@ export const loader: LoaderFunction = async ({ request }) => {
   const value = url.searchParams.getAll("value")[0] || "";
   const field = url.searchParams.getAll("field")[0] || "name";
   const sort = url.searchParams.getAll("sort")[0] || "asc";
+  // delete product param
   const deletePID = url.searchParams.getAll("deletePID")[0];
 
   // pagination
@@ -37,46 +44,24 @@ export const loader: LoaderFunction = async ({ request }) => {
   if (!categories) return null;
 
   // get products and it's total
-  const [productList, totalCount] = await db.$transaction([
-    db.product.findMany({
-      where: {
-        delete: false,
-        category: {
-          name: {
-            contains: name[0],
-          },
-        },
-        [column]: { [operator]: value || search[0] },
-      },
-      orderBy: { [field]: sort },
-      skip: skip,
-      take: limit,
-    }),
-    db.product.count({
-      where: { delete: false },
-    }),
-  ]);
+  const data = {
+    name: name[0],
+    column,
+    operator,
+    value,
+    search: search[0],
+    field,
+    skip,
+    sort,
+    limit,
+  };
+  const { productList, totalCount } = await getProducts(data);
   let message;
   if (deletePID) {
-    message = await db.$transaction(async () => {
-      const getProduct = await db.product.findFirst({
-        where: {
-          id: deletePID,
-          delete: false,
-        },
-      });
-      if (!getProduct) return { status: 404, message: "Product not found" };
-      await db.product.update({
-        where: { id: deletePID },
-        data: { delete: true },
-      });
-      return {
-        status: 200,
-        message: "Successfully product is deleted",
-      };
-    });
+    message = await deleteProduct(deletePID);
   }
 
+  // user ability on product
   const prod = productList.map(async (product) => ({
     ...product,
     canDelete: await (
@@ -87,10 +72,23 @@ export const loader: LoaderFunction = async ({ request }) => {
   return json({ products, totalCount, categories, message });
 };
 
+export const action: ActionFunction = async ({ request }) => {
+  const { id } = await getUserData(request);
+  const validData = await validProduct(
+    Object.fromEntries(await request.formData())
+  );
+  const data = { userId: id, ...validData.data };
+
+  // create product
+  const product = await createProduct(data);
+  if (product)
+    return json({ status: 200, message: "product created successfully" });
+  return validData;
+};
 // products ui components
 export default function Products() {
+  const actionData = useActionData();
   const { products, totalCount, categories, message } = useLoaderData();
-  console.log("fff", message);
   const submit = useSubmit();
   const [searchParams, setSearchParams] = useSearchParams();
   const category = searchParams.getAll("category");
@@ -100,17 +98,10 @@ export default function Products() {
         <Box minWidth="10vw">
           <Category categories={categories} submit={submit} />
         </Box>
-        {/* {viewProduct ? (
-          <Box width="60vw">
-            <Product
-              categories={categories}
-              products={products}
-              submit={submit}
-            />
-          </Box>
-        ) : null} */}
         <Box m={1} minWidth="80vw" display="flex" justifyContent="center">
           <ProductTable
+            actionData={actionData}
+            categories={categories}
             category={category}
             products={products}
             submit={submit}

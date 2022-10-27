@@ -1,11 +1,12 @@
 import { Box, Button, Link, Stack, TextField, Typography } from "@mui/material";
-import { ActionFunction } from "@remix-run/node";
+import { ActionFunction, LoaderFunction } from "@remix-run/node";
 import { Form, useTransition, useActionData, Outlet } from "@remix-run/react";
 import { User } from "@prisma/client";
 
 import { RegistrationOtp } from "~/utils/otp.server";
 import { createUserSession } from "~/utils/session.server";
 import { validRegistration } from "~/utils/validation.server";
+import { db } from "~/utils/db.server";
 
 type RegistrationData = {
   message: string;

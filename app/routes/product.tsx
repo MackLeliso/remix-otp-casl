@@ -1,16 +1,16 @@
-import { ForbiddenError, subject } from "@casl/ability";
+import { ForbiddenError } from "@casl/ability";
 import { Box, Divider, Typography } from "@mui/material";
-import { json, LoaderFunction, redirect } from "@remix-run/node";
-import { Outlet, useLoaderData } from "@remix-run/react";
-import { db } from "~/utils/db.server";
+import { LoaderFunction, redirect } from "@remix-run/node";
+import { Outlet } from "@remix-run/react";
 import { userAbility } from "~/utils/defineAbility.server";
 import { getUserData } from "~/utils/session.server";
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const { id } = await getUserData(request);
-  const check = await userAbility(id);
-  if (!check.rulesFor) return redirect("/login");
-  ForbiddenError.from(await userAbility(id))
+  const userData = await getUserData(request);
+  if (!userData) return redirect("/login");
+  const checkAbility = await userAbility(userData?.id);
+  if (!checkAbility) return redirect("/login");
+  ForbiddenError.from(await userAbility(userData?.id))
     .setMessage("You can't access this information")
     .throwUnlessCan("read", "product");
 
@@ -19,10 +19,8 @@ export const loader: LoaderFunction = async ({ request }) => {
 
 //  products user interfce
 export default function Products() {
-  const message = useLoaderData();
   return (
     <Box bgcolor="darkcyan" position="absolute">
-      {/* {productAbility.can("delete", "product")} */}
       <Typography
         textAlign="center"
         p={3}
@@ -39,7 +37,7 @@ export default function Products() {
           margin: "0 25px",
         }}
       />
-      <Outlet context={message} />
+      <Outlet />
     </Box>
   );
 }
