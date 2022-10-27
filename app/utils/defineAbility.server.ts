@@ -14,6 +14,7 @@ export const userAbility = async (id: string) => {
     include: { products: true },
   });
 
+  if (!user) return null;
   const productsId = user?.products.map((product) => product.id);
   const permConditions: any = {
     id,

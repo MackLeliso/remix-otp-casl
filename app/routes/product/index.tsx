@@ -17,6 +17,7 @@ import {
   createProduct,
   deleteProduct,
   getProducts,
+  updateProduct,
 } from "~/utils/product.server";
 export const loader: LoaderFunction = async ({ request }) => {
   const { id } = await getUserData(request);
@@ -66,18 +67,24 @@ export const loader: LoaderFunction = async ({ request }) => {
     ...product,
     canDelete: await (
       await userAbility(id)
-    ).can("delete", subject("product", { id: id, productId: product.id })),
+    )?.can("delete", subject("product", { id: id, productId: product.id })),
   }));
   const products = await Promise.all(prod);
   return json({ products, totalCount, categories, message });
 };
 
-export const action: ActionFunction = async ({ request }) => {
+export const action: ActionFunction = async ({ request, params }) => {
   const { id } = await getUserData(request);
   const validData = await validProduct(
     Object.fromEntries(await request.formData())
   );
   const data = { userId: id, ...validData.data };
+  // update product
+  if (validData.data.id) {
+    const product = await updateProduct(data);
+    if (product)
+      return json({ status: 200, message: "product updated successfully" });
+  }
 
   // create product
   const product = await createProduct(data);
