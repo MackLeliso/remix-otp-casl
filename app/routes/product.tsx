@@ -10,7 +10,7 @@ export const loader: LoaderFunction = async ({ request }) => {
   if (!userData) return redirect("/login");
   const checkAbility = await userAbility(userData?.id);
   if (!checkAbility) return redirect("/login");
-  ForbiddenError.from(await userAbility(userData?.id))
+  ForbiddenError.from(checkAbility)
     .setMessage("You can't access this information")
     .throwUnlessCan("read", "product");
 

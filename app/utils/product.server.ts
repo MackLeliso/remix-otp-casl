@@ -31,7 +31,15 @@ export const getProducts = async (data: ProductData) => {
         take: limit,
       }),
       db.product.count({
-        where: { delete: false },
+        where: {
+          delete: false,
+          category: {
+            name: {
+              contains: name,
+            },
+          },
+          [column]: { [operator]: value || search },
+        },
       }),
     ]);
 
@@ -41,9 +49,17 @@ export const getProducts = async (data: ProductData) => {
     throw new Error(error);
   }
 };
-
-export const createProduct = async (productData: any) => {
+type ProductType = {
+  id?: string;
+  name: string;
+  description?: string;
+  price?: string;
+  userId: string;
+  categoryId: string;
+};
+export const createProduct = async (productData: ProductType) => {
   try {
+    console.log("fff", productData);
     const product = await db.product.create({
       data: productData,
     });
@@ -53,7 +69,19 @@ export const createProduct = async (productData: any) => {
     throw new Error(error);
   }
 };
-export const updateProduct = async (id: string) => {};
+export const updateProduct = async (productData: ProductType) => {
+  try {
+    const { id, ...data } = productData;
+    const product = await db.product.update({
+      where: { id },
+      data: data,
+    });
+    if (!product) return null;
+    return product;
+  } catch (error: any) {
+    throw new Error(error);
+  }
+};
 
 export const deleteProduct = async (id: string) => {
   try {
