@@ -16,17 +16,29 @@ import {
   GridRowModel,
 } from "@mui/x-data-grid";
 import { Form } from "@remix-run/react";
-import { Button, TextField, Typography } from "@mui/material";
+import {
+  Button,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Modal,
+  Select,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { Add, Cancel, Delete, Edit, Save } from "@mui/icons-material";
 import { userAbility } from "~/utils/defineAbility.server";
+import { useSnackbar } from "notistack";
 
 // product table components
 export default function ProductTable({
   products,
   totalCount,
   submit,
+  categories,
   category,
   user,
+  actionData,
   message,
 }: any) {
   const [page, setPage] = React.useState(0);
@@ -34,6 +46,11 @@ export default function ProductTable({
   const [filter, setFilter] = React.useState();
   const [sort, setSort] = React.useState();
   const [rows, setRows] = React.useState(products);
+  const [open, setOpen] = React.useState(false);
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
   const [rowModesModel, setRowModesModel] = React.useState<GridRowModesModel>(
     {}
   );
@@ -48,17 +65,17 @@ export default function ProductTable({
   function EditToolbar(props: EditToolbarProps) {
     const { setRows, setRowModesModel } = props;
 
-    const handleClick = () => {
-      const id = uuid();
-      setRows((oldRows) => [
-        ...oldRows,
-        { id, name: "", age: "", isNew: true },
-      ]);
-      setRowModesModel((oldModel) => ({
-        ...oldModel,
-        [id]: { mode: GridRowModes.Edit, fieldToFocus: "name" },
-      }));
-    };
+    // const handleClick = () => {
+    //   const id = uuid();
+    //   setRows((oldRows) => [
+    //     ...oldRows,
+    //     { id, name: "", age: "", isNew: true },
+    //   ]);
+    //   setRowModesModel((oldModel) => ({
+    //     ...oldModel,
+    //     [id]: { mode: GridRowModes.Edit, fieldToFocus: "name" },
+    //   }));
+    // }
 
     return (
       <GridToolbarContainer>
@@ -95,7 +112,28 @@ export default function ProductTable({
   React.useEffect(() => {
     submit(sort ? sort[0] : null);
   }, [sort]);
-
+  React.useEffect(() => {
+    actionData?.message
+      ? enqueueSnackbar(actionData?.message, {
+          disableWindowBlurListener: true,
+          variant: "success",
+          preventDuplicate: true,
+        })
+      : null;
+  }, [actionData?.message]);
+  React.useEffect(() => {
+    message
+      ? message.status === 200
+        ? enqueueSnackbar(message?.message, {
+            variant: "success",
+            preventDuplicate: true,
+          })
+        : enqueueSnackbar(message?.message, {
+            variant: "error",
+            preventDuplicate: true,
+          })
+      : null;
+  }, [message?.status === 200]);
   const handleRowEditStart = (
     params: GridRowParams,
     event: MuiEvent<React.SyntheticEvent>
@@ -156,6 +194,18 @@ export default function ProductTable({
       editable: true,
     },
     {
+      field: "picture",
+      headerName: "Picture",
+      width: 140,
+      editable: true,
+    },
+    {
+      field: "price",
+      headerName: "Price",
+      width: 140,
+      editable: true,
+    },
+    {
       field: "createdAt",
       headerName: "Date Created",
       width: 180,
@@ -170,10 +220,10 @@ export default function ProductTable({
       getActions: ({ row }) => {
         const { id, canDelete } = row;
         const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
-        console.log("isInEditMode: " + isInEditMode);
         if (isInEditMode) {
           return [
             <GridActionsCellItem
+              disabled={true}
               icon={<Save />}
               label="Save"
               onClick={handleSaveClick(id)}
@@ -216,7 +266,7 @@ export default function ProductTable({
   return (
     <Box
       sx={{
-        height: 500,
+        height: 600,
         width: "95%",
         display: "flex",
         justifyContent: "center",
@@ -226,6 +276,7 @@ export default function ProductTable({
         mt: "30px",
       }}
     >
+      ;
       <Form method="get" onChange={(e) => submit(e.currentTarget)}>
         <TextField
           sx={{
@@ -238,6 +289,88 @@ export default function ProductTable({
           placeholder="Search"
         />
       </Form>
+      <Box>
+        <Modal
+          open={open}
+          onClose={handleClose}
+          aria-labelledby="modal-modal-title"
+          aria-describedby="modal-modal-description"
+        >
+          <Form method="post">
+            <Box
+              display="flex"
+              flexDirection="column"
+              justifyContent="center"
+              borderRadius={1}
+              sx={{
+                position: "absolute",
+                width: "60%",
+                transform: "translate(43%, 40%)",
+                bgcolor: "background.paper",
+                boxShadow: 24,
+                p: 4,
+              }}
+              gap={2}
+            >
+              <Typography id="modal-modal-title" variant="h6" component="h2">
+                Create Product
+              </Typography>
+              <TextField
+                id="filled-hidden-label-small"
+                placeholder="Name"
+                name="name"
+                variant="filled"
+                defaultValue={actionData?.field?.name}
+              />
+              <Typography variant="subtitle2" color="error">
+                {actionData?.fieldErrors?.name}
+              </Typography>
+              <TextField
+                id="filled-hidden-label-small"
+                placeholder="Desciption "
+                name="description"
+                variant="filled"
+                defaultValue={actionData?.field?.description}
+              />
+              <Typography variant="subtitle2" color="error">
+                {actionData?.fieldErrors?.description}
+              </Typography>
+              <FormControl fullWidth>
+                <InputLabel id="demo-simple-select-label">Category</InputLabel>
+                <Select
+                  labelId="demo-simple-select-label"
+                  id={categories}
+                  label="Category"
+                  name="categoryId"
+                >
+                  {categories?.map((cat: any) => (
+                    <MenuItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <TextField
+                id="filled-hidden-label-small"
+                placeholder="Price"
+                name="price"
+                variant="filled"
+                defaultValue={actionData?.field?.price}
+              />
+              <Typography variant="subtitle2" color="error">
+                {actionData?.fieldErrors?.price}
+              </Typography>
+              <Button type="submit" color="primary" variant="contained">
+                submit
+              </Button>{" "}
+            </Box>
+          </Form>
+        </Modal>
+
+        <Button color="primary" startIcon={<Add />} onClick={handleOpen}>
+          Add product
+        </Button>
+      </Box>
       <DataGrid
         components={{ Toolbar: GridToolbar }}
         rows={products}
@@ -261,17 +394,14 @@ export default function ProductTable({
         onRowEditStart={handleRowEditStart}
         onRowEditStop={handleRowEditStop}
         processRowUpdate={processRowUpdate}
-        components={{
-          Toolbar: EditToolbar,
-        }}
+        // components={{
+        //   Toolbar: EditToolbar,
+        // }}
         componentsProps={{
           toolbar: { setRows, setRowModesModel },
         }}
         experimentalFeatures={{ newEditingApi: true }}
       />
-      <Typography p={2} color={message?.status === 200 ? "green" : "red"}>
-        {message?.message}
-      </Typography>
     </Box>
   );
 }
