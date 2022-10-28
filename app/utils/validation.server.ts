@@ -9,11 +9,9 @@ const phone = z
   .startsWith("09", {
     message: "  Phone number start with 09...",
   });
-const name = z.string().min(1, { message: "First name is required" });
-const description = z
-  .string()
-  .min(1, { message: "Description name is required" });
-const price = z.string().min(1, { message: "Price name is required" });
+const name = z.string().min(1, { message: "Name is required" });
+const description = z.string().optional();
+const price = z.string().min(1, { message: "Price is required" }).optional();
 
 const userSchema = z.object({
   first_name,
