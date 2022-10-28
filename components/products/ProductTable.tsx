@@ -7,31 +7,30 @@ import {
   GridActionsCellItem,
   GridRowsProp,
   GridRowModesModel,
-  GridRowModes,
-  GridToolbarContainer,
   GridRowParams,
   MuiEvent,
   GridEventListener,
   GridRowId,
   GridRowModel,
 } from "@mui/x-data-grid";
-import { Form } from "@remix-run/react";
+import {
+  Form,
+  useActionData,
+  useLoaderData,
+  useSearchParams,
+  useSubmit,
+} from "@remix-run/react";
 import { Button, Modal, TextField } from "@mui/material";
 import { Add, Delete, Edit } from "@mui/icons-material";
 import { useSnackbar } from "notistack";
 import ProductModal from "./ProductModal";
 
 // product table components
-export default function ProductTable({
-  products,
-  totalCount,
-  submit,
-  categories,
-  category,
-  user,
-  actionData,
-  message,
-}: any) {
+export default function ProductTable() {
+  const { products, totalCount, categories, message } = useLoaderData();
+  const submit = useSubmit();
+  const actionData = useActionData();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(3);
   const [filter, setFilter] = React.useState();
@@ -41,54 +40,18 @@ export default function ProductTable({
   const [open, setOpen] = React.useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
   const [rowModesModel, setRowModesModel] = React.useState<GridRowModesModel>(
     {}
   );
   const [rowCountState, setRowCountState] = React.useState(totalCount || 0);
 
-  interface EditToolbarProps {
-    setRows: (newRows: (oldRows: GridRowsProp) => GridRowsProp) => void;
-    setRowModesModel: (
-      newModel: (oldModel: GridRowModesModel) => GridRowModesModel
-    ) => void;
+  const entries = Object.fromEntries(searchParams.entries());
+  const querys: any = {};
+  for (const [key, value] of Object.entries(entries)) {
+    querys[key] = value;
   }
-  function EditToolbar(props: EditToolbarProps) {
-    const { setRows, setRowModesModel } = props;
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    const handleClick = () => {
-      const id = uuid();
-      setRows((oldRows) => [
-        ...oldRows,
-        { id, name: "", age: "", isNew: true },
-      ]);
-      setRowModesModel((oldModel) => ({
-        ...oldModel,
-        [id]: { mode: GridRowModes.Edit, fieldToFocus: "name" },
-      }));
-    };
-
-    return (
-      <GridToolbarContainer>
-        <Button color="primary" startIcon={<Add />} onClick={handleClick}>
-          Add record
-        </Button>
-      </GridToolbarContainer>
-    );
-  }
-  // console.log("roe", rows);
-
-  React.useMemo(
-    () => ({
-      page,
-      pageSize,
-      category,
-      filter,
-      sort,
-    }),
-    [page, pageSize, category, filter, sort]
-  );
   React.useEffect(() => {
     setRowCountState((prevRowCountState: any) =>
       totalCount !== undefined ? totalCount : prevRowCountState
@@ -96,14 +59,17 @@ export default function ProductTable({
   }, [totalCount, setRowCountState]);
 
   React.useEffect(() => {
-    submit({ category: category[0] || "", offset: page, limit: pageSize });
+    submit({ ...querys, offset: page, limit: pageSize });
   }, [page, pageSize]);
+
   React.useEffect(() => {
     submit(filter ? filter?.items[0] : null);
   }, [filter]);
+
   React.useEffect(() => {
     submit(sort ? sort[0] : null);
   }, [sort]);
+
   React.useEffect(() => {
     actionData?.message
       ? enqueueSnackbar(actionData?.message, {
@@ -113,6 +79,7 @@ export default function ProductTable({
         })
       : null;
   }, [actionData?.message]);
+
   React.useEffect(() => {
     message
       ? message.status === 200
@@ -126,43 +93,15 @@ export default function ProductTable({
           })
       : null;
   }, [message?.status === 200]);
-  const handleRowEditStart = (
-    params: GridRowParams,
-    event: MuiEvent<React.SyntheticEvent>
-  ) => {
-    event.defaultMuiPrevented = true;
-  };
-
-  const handleRowEditStop: GridEventListener<"rowEditStop"> = (
-    params,
-    event
-  ) => {
-    event.defaultMuiPrevented = true;
-  };
 
   const handleEditClick = (row) => async () => {
     setForm(row);
     handleOpen();
     // <ProductModal />;
   };
-  const handleSaveClick = (id: GridRowId) => () => {
-    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
-  };
 
   const handleDeleteClick = (id: GridRowId) => async () => {
     submit({ deletePID: id }, { replace: false });
-  };
-
-  const handleCancelClick = (id: GridRowId) => () => {
-    setRowModesModel({
-      ...rowModesModel,
-      [id]: { mode: GridRowModes.View, ignoreModifications: true },
-    });
-
-    const editedRow = products.find((row: any) => row.id === id);
-    if (editedRow!.isNew) {
-      setRows(products.filter((row: any) => row.id !== id));
-    }
   };
 
   const processRowUpdate = (newRow: GridRowModel) => {
@@ -308,8 +247,6 @@ export default function ProductTable({
         editMode="row"
         rowModesModel={rowModesModel}
         onRowModesModelChange={(newModel) => setRowModesModel(newModel)}
-        onRowEditStart={handleRowEditStart}
-        onRowEditStop={handleRowEditStop}
         processRowUpdate={processRowUpdate}
         // components={{
         //   Toolbar: EditToolbar,
