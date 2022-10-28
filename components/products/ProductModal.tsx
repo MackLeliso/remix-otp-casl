@@ -1,6 +1,5 @@
 import {
   Box,
-  Button,
   FormControl,
   InputLabel,
   MenuItem,
@@ -9,8 +8,12 @@ import {
   Typography,
 } from "@mui/material";
 import { Form } from "@remix-run/react";
-export default function ProductModal({ form, actionData, categories }: any) {
-  console.log("form", form);
+export default function ProductModal({
+  children,
+  form,
+  actionData,
+  categories,
+}: any) {
   return (
     <>
       <Form method="post">
@@ -46,6 +49,7 @@ export default function ProductModal({ form, actionData, categories }: any) {
           <TextField
             id="filled-hidden-label-small"
             placeholder="Desciption "
+            disabled={form ? (form?.canEditDesc ? false : true) : false}
             name="description"
             variant="filled"
             defaultValue={actionData?.field?.description || form?.description}
@@ -71,6 +75,7 @@ export default function ProductModal({ form, actionData, categories }: any) {
           <TextField
             id="filled-hidden-label-small"
             placeholder="Price"
+            disabled={form ? (form?.canEditPrice ? false : true) : false}
             name="price"
             variant="filled"
             defaultValue={actionData?.field?.price || form?.price}
@@ -78,9 +83,7 @@ export default function ProductModal({ form, actionData, categories }: any) {
           <Typography variant="subtitle2" color="error">
             {actionData?.fieldErrors?.price}
           </Typography>
-          <Button type="submit" color="primary" variant="contained">
-            submit
-          </Button>{" "}
+          {children}
         </Box>
       </Form>
     </>

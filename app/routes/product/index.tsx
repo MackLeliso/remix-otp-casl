@@ -1,11 +1,5 @@
 import { Box } from "@mui/material";
 import { ActionFunction, json, LoaderFunction } from "@remix-run/node";
-import {
-  useActionData,
-  useLoaderData,
-  useSearchParams,
-  useSubmit,
-} from "@remix-run/react";
 import { db } from "~/utils/db.server";
 import Category from "components/products/Category";
 import ProductTable from "components/products/ProductTable";
@@ -67,7 +61,17 @@ export const loader: LoaderFunction = async ({ request }) => {
     ...product,
     canDelete: await (
       await userAbility(id)
-    )?.can("delete", subject("product", { id: id, productId: product.id })),
+    )?.can("delete", subject("product", { productId: product.id })),
+    canEditDesc: await (
+      await userAbility(id)
+    )?.can(
+      "update",
+      subject("product", { productId: product.id }),
+      "description"
+    ),
+    canEditPrice: await (
+      await userAbility(id)
+    )?.can("update", subject("product", { productId: product.id }), "price"),
   }));
   const products = await Promise.all(prod);
   return json({ products, totalCount, categories, message });
@@ -78,7 +82,12 @@ export const action: ActionFunction = async ({ request, params }) => {
   const validData = await validProduct(
     Object.fromEntries(await request.formData())
   );
+  console.log("validData", validData);
   const data = { userId: id, ...validData.data };
+
+  // return error message
+  if (validData.success === false) return validData;
+
   // update product
   if (validData.data.id) {
     const product = await updateProduct(data);
@@ -94,27 +103,14 @@ export const action: ActionFunction = async ({ request, params }) => {
 };
 // products ui components
 export default function Products() {
-  const actionData = useActionData();
-  const { products, totalCount, categories, message } = useLoaderData();
-  const submit = useSubmit();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const category = searchParams.getAll("category");
   return (
     <Box minWidth="100vw" minHeight="100vh" bgcolor="darkcyan">
       <Box width="100vw" display="flex" justifyContent="space-between">
         <Box minWidth="10vw">
-          <Category categories={categories} submit={submit} />
+          <Category />
         </Box>
         <Box m={1} minWidth="80vw" display="flex" justifyContent="center">
-          <ProductTable
-            actionData={actionData}
-            categories={categories}
-            category={category}
-            products={products}
-            submit={submit}
-            totalCount={totalCount}
-            message={message}
-          />
+          <ProductTable />
         </Box>
       </Box>
     </Box>

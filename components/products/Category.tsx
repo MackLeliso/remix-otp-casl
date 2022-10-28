@@ -1,8 +1,9 @@
 import { Box } from "@mui/material";
-import { Link } from "@remix-run/react";
+import { Link, useLoaderData } from "@remix-run/react";
 
 //  product category  component
-export default function Category({ categories }: any) {
+export default function Category() {
+  const { categories } = useLoaderData();
   return (
     <Box bgcolor="whitesmoke" p={5} borderRadius={1} m={5}>
       {categories?.map((category: any) => (
