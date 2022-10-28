@@ -73,9 +73,8 @@ export default function ProductTable() {
   React.useEffect(() => {
     actionData?.message
       ? enqueueSnackbar(actionData?.message, {
-          disableWindowBlurListener: true,
           variant: "success",
-          preventDuplicate: true,
+          preventDuplicate: false,
         })
       : null;
   }, [actionData?.message]);
@@ -85,14 +84,13 @@ export default function ProductTable() {
       ? message.status === 200
         ? enqueueSnackbar(message?.message, {
             variant: "success",
-            preventDuplicate: true,
           })
         : enqueueSnackbar(message?.message, {
             variant: "error",
-            preventDuplicate: true,
+            preventDuplicate: false,
           })
       : null;
-  }, [message?.status === 200]);
+  }, [message?.status]);
 
   const handleEditClick = (row) => async () => {
     setForm(row);
