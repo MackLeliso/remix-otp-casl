@@ -1,4 +1,4 @@
-import z from "zod";
+import z, { record } from "zod";
 
 const id = z.string().uuid().optional();
 const first_name = z.string().min(1, { message: "First name is required" });
@@ -13,6 +13,19 @@ const name = z.string().min(1, { message: "Name is required" });
 const description = z.string().optional();
 const price = z.string().min(1, { message: "Price is required" }).optional();
 
+const ACCEPTED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+];
+const picture = z
+  .any()
+  .refine(
+    (files) => ACCEPTED_IMAGE_TYPES.includes(files?.type),
+    ".jpg, .jpeg, .png and .webp files are accepted."
+  );
+
 const userSchema = z.object({
   first_name,
   last_name,
@@ -23,6 +36,7 @@ const productShema = z.object({
   name,
   description,
   price,
+  picture,
   categoryId: id,
   id,
 });

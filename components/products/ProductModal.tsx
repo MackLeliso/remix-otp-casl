@@ -16,7 +16,7 @@ export default function ProductModal({
 }: any) {
   return (
     <>
-      <Form method="post">
+      <Form method="post" encType="multipart/form-data">
         <Box
           display="flex"
           flexDirection="column"
@@ -82,6 +82,25 @@ export default function ProductModal({
           />
           <Typography variant="subtitle2" color="error">
             {actionData?.fieldErrors?.price}
+          </Typography>
+          <Box
+            sx={{ cursor: "pointer" }}
+            bgcolor="darkgrey"
+            p={1}
+            borderRadius={1}
+            width={100}
+          >
+            <label htmlFor="picture-input">Upload Picture</label>
+            <input
+              hidden
+              id="picture-input"
+              type="file"
+              name="picture"
+              accept=".jpg, .png, .jpeg"
+            />
+          </Box>
+          <Typography variant="subtitle2" color="error">
+            {actionData?.fieldErrors?.picture}
           </Typography>
           {children}
         </Box>

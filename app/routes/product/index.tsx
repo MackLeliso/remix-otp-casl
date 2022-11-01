@@ -1,5 +1,13 @@
 import { Box } from "@mui/material";
-import { ActionFunction, json, LoaderFunction } from "@remix-run/node";
+import {
+  ActionFunction,
+  json,
+  LoaderFunction,
+  unstable_composeUploadHandlers,
+  unstable_createFileUploadHandler,
+  unstable_createMemoryUploadHandler,
+  unstable_parseMultipartFormData,
+} from "@remix-run/node";
 import { db } from "~/utils/db.server";
 import Category from "components/products/Category";
 import ProductTable from "components/products/ProductTable";
@@ -78,16 +86,28 @@ export const loader: LoaderFunction = async ({ request }) => {
 };
 
 export const action: ActionFunction = async ({ request, params }) => {
-  const { id } = await getUserData(request);
-  const validData = await validProduct(
-    Object.fromEntries(await request.formData())
+  const uploadHandler = unstable_composeUploadHandlers(
+    unstable_createFileUploadHandler({
+      maxPartSize: 5_000_000,
+      directory: "public/product",
+      file: ({ filename }) => filename,
+    }),
+    // parse everything else into memory
+    unstable_createMemoryUploadHandler()
   );
-  console.log("validData", validData);
-  const data = { userId: id, ...validData.data };
-
+  const formData = await unstable_parseMultipartFormData(
+    request,
+    uploadHandler
+  );
+  const { id } = await getUserData(request);
+  const validData = await validProduct(await Object.fromEntries(formData));
+  const data = {
+    userId: id,
+    ...validData.data,
+    picture: validData.data?.picture?.name,
+  };
   // return error message
   if (validData.success === false) return validData;
-
   // update product
   if (validData.data.id) {
     const product = await updateProduct(data);
